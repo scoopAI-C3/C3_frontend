@@ -1,0 +1,49 @@
+@import "tailwindcss";
+@source "./**/*.{js,ts,jsx,tsx}";
+
+/* Inter Variable Font */
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-VariableFont.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* NanumSquareRound Fonts */
+@font-face {
+  font-family: "NanumSquareRound";
+  src: url("/fonts/NanumSquareRoundL.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NanumSquareRound";
+  src: url("/fonts/NanumSquareRoundR.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NanumSquareRound";
+  src: url("/fonts/NanumSquareRoundB.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "NanumSquareRound";
+  src: url("/fonts/NanumSquareRoundEB.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 기본 폰트 설정 */
+body {
+  font-family: "NanumSquareRound", "Inter", sans-serif;
+}

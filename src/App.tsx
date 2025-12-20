@@ -1,11 +1,8 @@
 import './App.css'
+import AgentControlCard from './components/AgentControlCard'
 
 function App() {
-  return (
-    <>
-    <div>안녕하세요</div>
-    </>
-  )
+  return <AgentControlCard />
 }
 
 export default App
