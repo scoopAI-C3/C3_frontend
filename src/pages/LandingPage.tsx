@@ -1,37 +1,126 @@
-import TextLogo from '../assets/TextLogo.png';
-import Logo from '../assets/appLogo.png';
-import Arrow from '../assets/arrow-right.svg';
-import { analyzeSession } from '../apis/session';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import TextLogo from "../assets/TextLogo.png";
+import Logo from "../assets/appLogo.png";
+import Arrow from "../assets/arrow-right.svg";
+import { analyzeSession } from "../apis/session";
+import { useNavigate } from "react-router-dom";
+
+const AI_SITES = [
+  { name: "ChatGPT", url: "https://chat.openai.com", color: "#10A37F" },
+  { name: "Claude", url: "https://claude.ai", color: "#D97706" },
+  { name: "Gemini", url: "https://gemini.google.com", color: "#4285F4" },
+  { name: "Copilot", url: "https://copilot.microsoft.com", color: "#9333EA" },
+];
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [showGuide, setShowGuide] = useState(false);
+
   const handleAnalyze = async () => {
-    const data = await chrome.storage.local.get(['sessionId']) as { sessionId?: string };
+    const data = (await chrome.storage.local.get(["sessionId"])) as {
+      sessionId?: string;
+    };
     if (data.sessionId) {
       await analyzeSession({ sessionId: data.sessionId });
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
-  }
+  };
   return (
     <div className="flex flex-col items-center justify-start w-screen h-screen bg-[#211F26] py-10">
       <header className="flex items-center justify-between w-full px-12 pb-10">
-        <img className="w-44 h-9 cursor-pointer" onClick={() => navigate('/landing')} src={TextLogo} alt="Text Logo" />
-        <h3 className="text-white/70 text-base font-bold cursor-pointer">KR</h3>
+        <img
+          className="w-44 h-9 cursor-pointer"
+          onClick={() => navigate("/landing")}
+          src={TextLogo}
+          alt="Text Logo"
+        />
+        <div className="flex items-center gap-4">
+          <h3 className="text-white/70 text-base font-bold cursor-pointer">KR</h3>
+          <div className="relative">
+            <button
+              onClick={() => setShowGuide(!showGuide)}
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all text-sm font-bold"
+            >
+              ?
+            </button>
+            {showGuide && (
+              <div className="absolute right-0 top-12 w-96 bg-[#2D2B33] rounded-2xl shadow-2xl border border-white/10 p-5 z-50">
+                {/* 말풍선 꼬리 */}
+                <div className="absolute -top-2 right-4 w-4 h-4 bg-[#2D2B33] border-l border-t border-white/10 transform rotate-45" />
+
+                <h4 className="text-white font-bold text-base mb-3">확장 프로그램 설치 방법</h4>
+                <ol className="text-white/60 text-sm mb-4 leading-relaxed space-y-2">
+                  <li className="flex gap-2">
+                    <span className="text-[#A855F7] font-bold">1.</span>
+                    <span>Chrome에서 <code className="bg-white/10 px-1 rounded text-xs">chrome://extensions</code> 접속</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-[#A855F7] font-bold">2.</span>
+                    <span>우측 상단 "개발자 모드" 활성화</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-[#A855F7] font-bold">3.</span>
+                    <span>"압축해제된 확장 프로그램을 로드합니다" 클릭</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-[#A855F7] font-bold">4.</span>
+                    <span>빌드된 <code className="bg-white/10 px-1 rounded text-xs">dist</code> 폴더 선택</span>
+                  </li>
+                </ol>
+
+                <div className="border-t border-white/10 pt-4">
+                  <p className="text-white/40 text-xs mb-3">설치 후, AI 사이트에서 작업을 시작하세요</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {AI_SITES.map((site) => (
+                      <a
+                        key={site.name}
+                        href={site.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                      >
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: site.color }}
+                        />
+                        <span className="text-white/80 text-sm">{site.name}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </header>
       <main className="flex flex-col items-center font-[NanumSquareRound] text-white">
         <img className="w-36 h-36 rounded-2xl mb-10" src={Logo} alt="Landing" />
-        <h1 className="text-5xl font-bold mb-6">당신은 AI와 어떻게 협업하고 있나요?</h1>
+        <h1 className="text-5xl font-bold mb-6">
+          당신은 AI와 어떻게 협업하고 있나요?
+        </h1>
         <p className="text-center text-lg mb-15 leading-10">
           AI Collaboration Profile은 당신의 작업 로그를 분석하여
           <br />
           인간과 AI 사이의 '결정 경계'를 찾아냅니다.
         </p>
         <div className="flex flex-row gap-10 font-[Inter]">
-            <button className='flex flex-row items-center justify-between gap-5 px-8 py-6 bg-gradient-to-r from-fuchsia-400 to-purple-500 rounded-3xl text-xl font-semibold leading-10 cursor-pointer' onClick={handleAnalyze}>Start Observation
-              <img className="w-6 h-6 bg-blend-color-dodge" src={Arrow} alt="Arrow" />
-            </button>
-            <button className="px-8 py-6 rounded-3xl bg-white border-[3px] border-[#DFDFDF] text-xl font-semibold text-[#979797] cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => navigate('/survey-intro')}>Survey</button>
+          <button
+            className="flex flex-row items-center justify-between gap-5 px-6 py-4 bg-gradient-to-r from-fuchsia-400 to-purple-500 rounded-3xl text-xl font-semibold leading-10 cursor-pointer w-70"
+            onClick={handleAnalyze}
+          >
+            Start Observation
+            <img
+              className="w-6 h-6 bg-blend-color-dodge"
+              src={Arrow}
+              alt="Arrow"
+            />
+          </button>
+          <button
+            className="px-8 py-6 rounded-3xl bg-white border-[3px] border-[#DFDFDF] text-xl font-semibold text-[#979797] cursor-pointer hover:bg-gray-50 transition-colors w-70"
+            onClick={() => navigate("/survey-intro")}
+          >
+            Survey
+          </button>
         </div>
       </main>
     </div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ScrollReveal from "../ScrollReveal";
-import type { DailyTimeline } from "../../types/session";
+import type { DailyTimeline, TimelineEvent } from "../../types/session";
 import { createShareLink } from "../../apis/share";
 
 interface TimelineSectionProps {
@@ -12,6 +12,111 @@ interface TimelineSectionProps {
 }
 
 const TOOL_COLORS = ["#6C47B5", "#8F57FF", "#362F45"];
+
+const TIMELINE_COLORS = [
+  "#A3E635",
+  "#22D3EE",
+  "#38BDF8",
+  "#818CF8",
+  "#C084FC",
+  "#F472B6",
+  "#FB923C",
+  "#FACC15",
+];
+
+const timeToMinutes = (time: string): number => {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+};
+
+interface TimelineChartProps {
+  events: TimelineEvent[];
+}
+
+const TimelineChart = ({ events }: TimelineChartProps) => {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  if (events.length === 0) return null;
+
+  const allTimes = events.map((e) => timeToMinutes(e.start));
+  const minTime = Math.min(...allTimes);
+  const maxTime = Math.max(...allTimes);
+  const timeRange = maxTime - minTime || 1;
+
+  return (
+    <div className="relative w-full py-16 px-8">
+      <div className="absolute left-8 right-8 top-1/2 h-1 bg-gradient-to-r from-[#A3E635] via-[#38BDF8] to-[#C084FC] rounded-full" />
+
+      <div className="relative flex justify-between items-center" style={{ height: "200px" }}>
+        {events.map((event, idx) => {
+          const position = ((timeToMinutes(event.start) - minTime) / timeRange) * 100;
+          const isTop = idx % 2 === 0;
+          const color = TIMELINE_COLORS[idx % TIMELINE_COLORS.length];
+
+          return (
+            <div
+              key={idx}
+              className="absolute flex flex-col items-center"
+              style={{
+                left: `${position}%`,
+                transform: "translateX(-50%)",
+              }}
+            >
+              {isTop && (
+                <div className="flex flex-col items-center mb-2" style={{ marginTop: "-60px" }}>
+                  <span className="text-xs font-medium mb-1" style={{ color }}>
+                    {event.start}
+                  </span>
+                  <div className="w-0.5 h-10" style={{ backgroundColor: color }} />
+                </div>
+              )}
+
+              <div
+                className="relative z-10 cursor-pointer transition-transform duration-200 hover:scale-125"
+                onMouseEnter={() => setHoveredIndex(idx)}
+                onMouseLeave={() => setHoveredIndex(null)}
+              >
+                <div
+                  className="w-5 h-5 rounded-full border-4 border-[#211F26]"
+                  style={{ backgroundColor: color }}
+                />
+
+                {hoveredIndex === idx && (
+                  <div
+                    className={`absolute z-50 px-4 py-3 rounded-lg shadow-xl whitespace-nowrap ${
+                      isTop ? "top-8" : "bottom-8"
+                    }`}
+                    style={{
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      backgroundColor: "rgba(33, 31, 38, 0.95)",
+                      border: `1px solid ${color}`,
+                      minWidth: "200px",
+                    }}
+                  >
+                    <div className="text-xs font-mono mb-1" style={{ color }}>
+                      {event.start} - {event.end}
+                    </div>
+                    <div className="text-sm text-white/90">{event.label}</div>
+                  </div>
+                )}
+              </div>
+
+              {!isTop && (
+                <div className="flex flex-col items-center mt-2" style={{ marginBottom: "-60px" }}>
+                  <div className="w-0.5 h-10" style={{ backgroundColor: color }} />
+                  <span className="text-xs font-medium mt-1" style={{ color }}>
+                    {event.start}
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 const BAR_COLOR = "#643E83";      
 const BAR_BG_COLOR = "#211F26";    
@@ -66,14 +171,16 @@ const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage
     <section className="flex flex-col items-center w-screen min-h-screen py-10 px-17">
       <div className="flex flex-col items-start w-full">
         <ScrollReveal animation="fadeUp" delay={0} className="w-full">
-          <div className="flex bg-white/5 font-[Inter] px-7 py-6 w-full rounded-lg">
-            <div className="flex flex-row items-center w-full h-full">
+          <div className="flex flex-col bg-white/5 font-[Inter] px-7 py-6 w-full rounded-lg">
+            <div className="flex flex-row items-center w-full">
               <h2 className="text-2xl font-normal mr-5 text-white">Daily TimeLine</h2>
               <p className="text-white/50 text-xs font-normal leading-5">
-                오늘 당신은 하루동안 총 {dailyTimeline.decisionCount}번의 결정을
-                AI에 위임했습니다.
+                오늘 당신은 총 {dailyTimeline.decisionCount}번의 결정을 AI와 함께했습니다.
               </p>
             </div>
+            {dailyTimeline.events.length > 0 && (
+              <TimelineChart events={dailyTimeline.events} />
+            )}
           </div>
 
           <div className="flex flex-row w-full mt-6 gap-4">

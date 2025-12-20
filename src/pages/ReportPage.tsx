@@ -374,25 +374,33 @@ const ReportPage = () => {
             >
               <h2 className="text-white text-xl font-semibold mb-6">이벤트 유형별 분포</h2>
 
-              <div className="space-y-4">
-                {Object.entries(eventDistribution).map(([eventType, count]) => (
-                  <div key={eventType}>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-white/70 text-sm">{eventType.replace(/_/g, ' ')}</span>
-                      <span className="text-white text-sm">{count}건</span>
+              {Object.keys(eventDistribution).length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <span className="text-white/30 text-4xl mb-3">📊</span>
+                  <p className="text-white/50 text-sm">아직 수집된 이벤트 데이터가 없습니다.</p>
+                  <p className="text-white/30 text-xs mt-1">AI 사이트에서 활동 후 다시 확인해주세요.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {Object.entries(eventDistribution).map(([eventType, count]) => (
+                    <div key={eventType}>
+                      <div className="flex justify-between mb-2">
+                        <span className="text-white/70 text-sm">{eventType.replace(/_/g, ' ')}</span>
+                        <span className="text-white text-sm">{count}건</span>
+                      </div>
+                      <div className="h-[7px] rounded-full overflow-hidden" style={{ background: 'transparent' }}>
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${(count / maxEventCount) * 100}%`,
+                            background: 'linear-gradient(90deg, #E822E5 0%, #7C3BEC 100%)'
+                          }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-[7px] rounded-full overflow-hidden" style={{ background: 'transparent' }}>
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${(count / maxEventCount) * 100}%`,
-                          background: 'linear-gradient(90deg, #E822E5 0%, #7C3BEC 100%)'
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex justify-center pb-8">
