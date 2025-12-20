@@ -113,57 +113,72 @@ function AgentControlCard() {
   };
   const statusStyle = getStatusStyle(agentStatus);
   return (
-    <div className="flex flex-col w-[540px] h-[720px] bg-white p-10 gap-5 font-[Inter]">
+    <div className="flex flex-col w-[540px] h-[720px] bg-[#211F26] p-10 gap-5 font-[Inter]">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-lg bg-[#EDDDFF]" />
-        <h1 className="text-xl font-semibold text-black">Agent Control</h1>
+        <div className="w-12 h-12 rounded-xl border-2 border-[#A36EFF] bg-[#2B2930] flex items-center justify-center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L14.5 9H21.5L16 13.5L18 21L12 16.5L6 21L8 13.5L2.5 9H9.5L12 2Z" fill="url(#sparkleGradient)" />
+            <path d="M19 8L20 10.5H22.5L20.5 12L21.5 14.5L19 12.5L16.5 14.5L17.5 12L15.5 10.5H18L19 8Z" fill="url(#sparkleGradient)" />
+            <defs>
+              <linearGradient id="sparkleGradient" x1="12" y1="2" x2="12" y2="21" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#FF7DFD" />
+                <stop offset="1" stopColor="#A36EFF" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <h1 className="text-xl font-semibold text-white">선택적 AI 활용</h1>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-base font-medium text-black">Monitoring</span>
+      <div className="bg-[#2B2930] rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-5">
+          <span className="text-lg font-semibold text-white">Monitoring</span>
           <button
             onClick={handleMonitoringToggle}
-            className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
-              isMonitoring ? "bg-[#9130FF]" : "bg-gray-300"
+            className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
+              isMonitoring ? "bg-[#A36EFF]" : "bg-gray-600"
             }`}
           >
             <span
-              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
-                isMonitoring ? "translate-x-6" : "translate-x-0"
+              className={`absolute top-0.5 left-0.5 w-6 h-6 bg-[#211F26] rounded-full shadow transition-transform duration-200 ${
+                isMonitoring ? "translate-x-7" : "translate-x-0"
               }`}
             />
           </button>
         </div>
 
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-[#919191]">Agent Status</span>
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-base text-white/60">Agent Status</span>
           <div className="flex items-center gap-2">
-            <span className={`w-4 h-4 ${statusStyle.dot} rounded-full`}></span>
-            <span className={`text-sm font-medium ${statusStyle.text}`}>
+            <span className={`w-3 h-3 ${statusStyle.dot} rounded-full`}></span>
+            <span className={`text-base font-medium ${statusStyle.text}`}>
               {agentStatus}
             </span>
           </div>
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-[#919191]">Decision Risk</span>
-          <span className={`text-sm font-medium ${getRiskColor(decisionRisk)}`}>
+          <span className="text-base text-white/60">Decision Risk</span>
+          <span className={`text-base font-medium ${getRiskColor(decisionRisk)}`}>
             {decisionRisk}
           </span>
         </div>
       </div>
 
       <div>
-        <h2 className="text-xs font-semibold text-[#989898] tracking-wider mb-3">
+        <h2 className="text-xs font-semibold text-white tracking-wider mb-4">
           RECENT EVENTS
         </h2>
         <div className="space-y-0">
           {recentEvents.map((event, index) => (
-            <div key={index} className="flex items-start gap-3 py-2">
-              <div className="relative pl-3 border-l-2 border-[#CFCFCF]">
-                <span className="text-[#989898] mr-5">{event.time}</span>
-                <span className="text-[#676767]">{event.message}</span>
+            <div key={index} className="flex items-start py-3">
+              <div
+                className="w-0.5 h-full min-h-[40px] mr-4 rounded-full"
+                style={{ background: `linear-gradient(180deg, #FF7DFD ${index * 30}%, #A36EFF 100%)` }}
+              />
+              <div className="flex items-center gap-4">
+                <span className="text-white/50 text-sm">{event.time}</span>
+                <span className="text-white text-sm">{event.message}</span>
               </div>
             </div>
           ))}
@@ -171,7 +186,7 @@ function AgentControlCard() {
       </div>
 
       <button
-        className="w-full mt-6 py-3 text-sm text-purple-600 hover:text-purple-700 font-medium hover:bg-purple-50 rounded-lg transition-colors"
+        className="w-full mt-auto py-3 text-sm text-[#A36EFF] hover:text-[#FF7DFD] font-medium hover:bg-white/5 rounded-lg transition-colors"
         onClick={() => chrome.tabs.create({ url: chrome.runtime.getURL('index.html#/landing') })}
       >
         Open Full Dashboard →

@@ -108,12 +108,22 @@ const Dashboard = () => {
           <TimelineSection dailyTimeline={sessionResult.dailyTimeline} />
         )}
 
-        {/* Report Button - 기존 세션 결과에서만 표시 */}
+        {/* Buttons - 기존 세션 결과에서만 표시 */}
         {!isFromSurvey && (
-          <div className="flex justify-center py-16">
+          <div className="flex justify-center gap-4 py-16">
+            <button
+              onClick={() => {
+                const url = window.location.href;
+                navigator.clipboard.writeText(url);
+                alert('링크가 클립보드에 복사되었습니다!');
+              }}
+              className="px-16 py-5 rounded-[28px] bg-gradient-to-r from-[#C930C7] to-[#A36EFF] text-white text-xl font-semibold cursor-pointer hover:opacity-90 transition-opacity"
+            >
+              Share
+            </button>
             <button
               onClick={() => navigate('/report')}
-              className="px-16 py-5 rounded-[28px] bg-gradient-to-r from-[#C930C7] to-[#A36EFF] text-white text-xl font-semibold cursor-pointer hover:opacity-90 transition-opacity"
+              className="px-16 py-5 rounded-[28px] border border-white/30 text-white/70 text-xl font-semibold cursor-pointer hover:bg-white/10 transition-colors"
             >
               상세 리포트 보기
             </button>

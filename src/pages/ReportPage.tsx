@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { getSessionGraph } from "../apis/session";
 import type { SessionGraphData } from "../types/session";
+import reportBg from "../assets/reportBg.png";
 
 // 노드 실행 단계 한글 매핑
 const nodeNameMap: Record<string, string> = {
@@ -218,6 +219,15 @@ const ReportPage = () => {
           </div>
         </div>
 
+        {/* ===== Background Section (선택적 AI 활용부터) ===== */}
+        <div
+          className="relative -mx-10 px-10 py-6"
+          style={{
+            backgroundImage: `url(${reportBg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'top center',
+          }}
+        >
         {/* ===== 3. 선택적 AI 활용 Section ===== */}
         <div
           className="rounded-2xl p-6 mb-6"
@@ -407,6 +417,8 @@ const ReportPage = () => {
             스타일 결과로 돌아가기
           </button>
         </div>
+        </div>
+        {/* End of Background Section */}
       </main>
     </div>
   );
