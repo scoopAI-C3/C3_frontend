@@ -6,6 +6,7 @@ import LandingPage from './pages/LandingPage'
 import SurveyIntroPage from './pages/SurveyIntroPage'
 import SurveyPage from './pages/SurveyPage'
 import ReportPage from './pages/ReportPage'
+import SharedPage from './pages/SharedPage'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/survey-intro" element={<SurveyIntroPage />} />
         <Route path="/survey" element={<SurveyPage />} />
         <Route path="/report" element={<ReportPage />} />
+        <Route path="/shared/:shareToken" element={<SharedPage />} />
       </Routes>
     </HashRouter>
   )
