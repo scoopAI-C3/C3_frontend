@@ -61,6 +61,17 @@ export interface PrimaryStyle {
   description: string
 }
 
+export interface StyleDetail {
+  tagline: string
+  summary: string
+  todayMessage: string
+  description: string
+  catchphrase: string
+  detailStrengths: string[]
+  detailCautions: string[]
+  tip: string
+}
+
 export interface DataSummary {
   aiUsageFrequency: string
   avgPromptInterval: string
@@ -82,11 +93,12 @@ export interface DailyTimeline {
 export interface SessionResultData {
   sessionId: string
   primaryStyle: PrimaryStyle
+  styleDetail: StyleDetail
   dataSummary: DataSummary
   strengths: string[]
   cautions: string[]
   dailyTimeline: DailyTimeline
-  roleDistribution: Record<string, number>
+  roleDistribution: Record<string, number> | null
   relativeStyles: Record<string, number>
   aiToolUsage: Record<string, number>
 }
