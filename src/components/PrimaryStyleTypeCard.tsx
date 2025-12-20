@@ -1,12 +1,14 @@
 import AI_Executor from '../assets/AI-DrivenExecutor.svg';
 import AI_Thinker from '../assets/AI-AssistedThinker.svg';
 import AI_Checker from '../assets/AI-Checker.svg';
+import Balanced from '../assets/BalancedCollaborator.svg';
 import type { PrimaryStyle, StyleDetail } from '../types/session';
 
 const typeImageMap: Record<string, string> = {
   'AI_CHECKER': AI_Checker,
   'AI_DRIVEN_EXECUTOR': AI_Executor,
   'AI_ASSISTED_THINKER': AI_Thinker,
+  'BALANCED_COLLABORATOR': Balanced,
 };
 
 interface PrimaryStyleTypeCardProps {
