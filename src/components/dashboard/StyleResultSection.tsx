@@ -23,7 +23,7 @@ const StyleResultSection = ({ primaryStyle, styleDetail }: StyleResultSectionPro
           <PrimaryStyleTypeCard primaryStyle={primaryStyle} styleDetail={styleDetail} />
         </ScrollReveal>
         <ScrollReveal animation="fadeUp" delay={200}>
-          <h1 className="text-left text-5xl font-bold mt-12 mb-6">
+          <h1 className="text-left text-4xl font-bold mt-12 mb-6">
             당신의{" "}
             <span className="bg-clip-text text-transparent bg-[linear-gradient(90deg,#FF7DFD_81%,#A36EFF_100%)]">
               AI 협업

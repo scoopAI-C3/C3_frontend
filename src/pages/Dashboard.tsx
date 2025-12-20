@@ -1,22 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
-import StyleResultSection from "../components/dashboard/StyleResultSection";
-import DetailResultSection from "../components/dashboard/DetailResultSection";
-import DataStatusSection from "../components/dashboard/DataStatusSection";
-import StrengthWeaknessSection from "../components/dashboard/StrengthWeaknessSection";
-import TimelineSection from "../components/dashboard/TimelineSection";
+import SessionResultDisplay from "../components/dashboard/SessionResultDisplay";
 import { getSessionResult } from "../apis/session";
 import type { SessionResultData, SurveyResultData } from "../types/session";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const [sessionResult, setSessionResult] = useState<SessionResultData | null>(
-    null
-  );
-  const [surveyResult, setSurveyResult] = useState<SurveyResultData | null>(
-    null
-  );
+  const [sessionResult, setSessionResult] = useState<SessionResultData | null>(null);
+  const [surveyResult, setSurveyResult] = useState<SurveyResultData | null>(null);
   const [isFromSurvey, setIsFromSurvey] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -58,92 +48,34 @@ const Dashboard = () => {
     fetchResult();
   }, []);
 
-  // 현재 사용할 데이터 결정
-  const currentData = isFromSurvey ? surveyResult : sessionResult;
-
   if (loading) {
     return <LoadingSpinner />;
   }
 
-  return (
-    <div className="flex flex-col items-center justify-start w-screen min-h-screen bg-[#211F26] overflow-y-auto">
-      <main className="flex flex-col items-center font-[NanumSquareRound] text-white">
-        {currentData?.primaryStyle && currentData?.styleDetail && (
-          <StyleResultSection
-            primaryStyle={currentData.primaryStyle}
-            styleDetail={currentData.styleDetail}
-          />
-        )}
-        {currentData?.primaryStyle && currentData?.styleDetail && (
-          <DetailResultSection
-            primaryStyle={currentData.primaryStyle}
-            styleDetail={currentData.styleDetail}
-          />
-        )}
-        {/* DataStatusSection - 기존 세션 결과에서만 표시 (설문조사 결과에는 relativeStyles, aiToolUsage가 없음) */}
-        {!isFromSurvey && sessionResult && (
-          <DataStatusSection
-            dataSummary={sessionResult.dataSummary}
-            relativeStyles={sessionResult.relativeStyles}
-            aiToolUsage={sessionResult.aiToolUsage}
-          />
-        )}
-        {/* 설문조사에서 온 경우 dataSummary만 표시 */}
-        {isFromSurvey && surveyResult?.dataSummary && (
-          <DataStatusSection
-            dataSummary={surveyResult.dataSummary}
-            relativeStyles={null}
-            aiToolUsage={null}
-          />
-        )}
-        {currentData?.styleDetail && (
-          <StrengthWeaknessSection
-            detailStrengths={currentData.styleDetail.detailStrengths}
-            detailCautions={currentData.styleDetail.detailCautions}
-            tip={currentData.styleDetail.tip}
-          />
-        )}
-        {/* TimelineSection - 기존 세션 결과에서만 표시 */}
-        {!isFromSurvey && sessionResult?.dailyTimeline && (
-          <TimelineSection dailyTimeline={sessionResult.dailyTimeline} />
-        )}
+  // 설문조사 결과인 경우
+  if (isFromSurvey && surveyResult) {
+    // SurveyResultData를 SessionResultData 형식으로 변환
+    const convertedData: SessionResultData = {
+      sessionId: "",
+      primaryStyle: surveyResult.primaryStyle,
+      styleDetail: surveyResult.styleDetail,
+      dataSummary: surveyResult.dataSummary,
+      strengths: surveyResult.strengths,
+      cautions: surveyResult.cautions,
+      roleDistribution: null,
+      relativeStyles: null as unknown as SessionResultData["relativeStyles"],
+      aiToolUsage: null as unknown as SessionResultData["aiToolUsage"],
+      dailyTimeline: null as unknown as SessionResultData["dailyTimeline"],
+    };
+    return <SessionResultDisplay data={convertedData} isSharedView={false} />;
+  }
 
-        {/* Buttons - 기존 세션 결과에서만 표시 */}
-        {!isFromSurvey && (
-          <div className="flex justify-center gap-4 py-16">
-            <button
-              onClick={() => {
-                const url = window.location.href;
-                navigator.clipboard.writeText(url);
-                alert('링크가 클립보드에 복사되었습니다!');
-              }}
-              className="px-16 py-5 rounded-[28px] bg-gradient-to-r from-[#C930C7] to-[#A36EFF] text-white text-xl font-semibold cursor-pointer hover:opacity-90 transition-opacity"
-            >
-              Share
-            </button>
-            <button
-              onClick={() => navigate('/report')}
-              className="px-16 py-5 rounded-[28px] border border-white/30 text-white/70 text-xl font-semibold cursor-pointer hover:bg-white/10 transition-colors"
-            >
-              상세 리포트 보기
-            </button>
-          </div>
-        )}
+  // 세션 결과인 경우
+  if (!sessionResult) {
+    return <div className="bg-[#211F26] w-screen h-screen" />;
+  }
 
-        {/* 설문조사에서 온 경우 랜딩 페이지로 돌아가는 버튼 */}
-        {isFromSurvey && (
-          <div className="flex justify-center py-16">
-            <button
-              onClick={() => navigate('/landing')}
-              className="px-16 py-5 rounded-[28px] bg-gradient-to-r from-[#C930C7] to-[#A36EFF] text-white text-xl font-semibold cursor-pointer hover:opacity-90 transition-opacity"
-            >
-              처음으로 돌아가기
-            </button>
-          </div>
-        )}
-      </main>
-    </div>
-  );
+  return <SessionResultDisplay data={sessionResult} isSharedView={false} />;
 };
 
 export default Dashboard;

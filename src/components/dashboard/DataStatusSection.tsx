@@ -14,22 +14,24 @@ interface DataStatusSectionProps {
 }
 
 const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
-  const cardContainerClass = "relative flex items-center justify-center w-[160px] h-[220px]";
-  const textContainerClass = "relative z-10 flex flex-col items-center pt-10 px-4 pb-6 w-full h-full justify-between";
+  const cardContainerClass = "relative flex items-center justify-center w-[180px] h-[240px]";
+  const textContainerClass = "relative z-10 flex flex-col items-center pt-14 px-6 pb-7 w-full h-full justify-between";
   const titleClass = "text-xl font-bold leading-tight text-center break-keep min-h-[50px] flex items-center justify-center";
   const valueClass = "text-xl font-bold leading-10 text-[#FF69FA]";
 
   return (
     <section
-      className="flex flex-col items-center w-screen min-h-screen bg-cover bg-center bg-no-repeat py-20"
+      className="flex flex-col justify-center w-screen min-h-screen bg-cover bg-center bg-no-repeat py-20"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
-      <div className="flex flex-col items-start w-[676px]">
-        <ScrollReveal animation="fadeUp" delay={0}>
-          <h2 className="text-3xl font-bold mb-15">
+      <div className="flex flex-col items-center justify-center w-full px-[55px]">
+        <ScrollReveal animation="fadeUp" delay={0} className="w-fit flex flex-col items-center">
+          <h2 className="w-full text-3xl font-bold mb-15 text-white text-center">
             데이터가 이렇게 말하고 있어요
           </h2>
-          <div className="text-white/50 flex flex-row justify-between gap-4">
+          
+  
+          <div className="w-fit text-white/50 flex flex-row gap-7 flex-wrap">
             <div className={cardContainerClass}>
               <img src={Rectangle} alt="Background" className="absolute inset-0 w-full h-full object-fill" />
               <div className={textContainerClass}>
