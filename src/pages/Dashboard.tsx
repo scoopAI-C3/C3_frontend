@@ -84,7 +84,7 @@ const Dashboard = () => {
       aiToolUsage: null as unknown as SessionResultData["aiToolUsage"],
       dailyTimeline: null as unknown as SessionResultData["dailyTimeline"],
     };
-    return <SessionResultDisplay data={convertedData} isSharedView={false} />;
+    return <SessionResultDisplay data={convertedData} isSharedView={false} isFromSurvey={true} />;
   }
 
   // 세션 결과인 경우

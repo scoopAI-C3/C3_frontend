@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import StyleResultSection from "./StyleResultSection";
 import DetailResultSection from "./DetailResultSection";
 import DataStatusSection from "./DataStatusSection";
@@ -8,9 +9,18 @@ import type { SessionResultData } from "../../types/session";
 interface SessionResultDisplayProps {
   data: SessionResultData;
   isSharedView?: boolean;
+  isFromSurvey?: boolean;
 }
 
-const SessionResultDisplay = ({ data }: SessionResultDisplayProps) => {
+const SessionResultDisplay = ({ data, isFromSurvey = false }: SessionResultDisplayProps) => {
+  const navigate = useNavigate();
+
+  const handleShare = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+    alert('링크가 클립보드에 복사되었습니다!');
+  };
+
   return (
     <div className="flex flex-col items-center justify-start w-screen min-h-screen bg-[#211F26] overflow-y-auto">
       <main className="flex flex-col items-center font-[NanumSquareRound] text-white">
@@ -38,13 +48,35 @@ const SessionResultDisplay = ({ data }: SessionResultDisplayProps) => {
             tip={data.styleDetail.tip}
           />
         )}
-        {data.dailyTimeline && (
+
+        {/* 세션 결과인 경우 TimelineSection 표시 */}
+        {!isFromSurvey && data.dailyTimeline && (
           <TimelineSection
             sessionId={data.sessionId}
             dailyTimeline={data.dailyTimeline}
             relativeStyles={data.relativeStyles}
             aiToolUsage={data.aiToolUsage}
           />
+        )}
+
+        {/* 설문조사 결과인 경우 공유/홈 버튼 표시 */}
+        {isFromSurvey && (
+          <section className="flex flex-col items-center w-screen py-16 px-17">
+            <div className="flex flex-row justify-center gap-11 font-[Inter]">
+              <button
+                onClick={handleShare}
+                className="w-80 h-28 bg-gradient-to-r from-fuchsia-400 to-purple-500 rounded-3xl text-xl font-semibold leading-10 cursor-pointer hover:opacity-90 transition-opacity text-white"
+              >
+                Share
+              </button>
+              <button
+                onClick={() => navigate('/landing')}
+                className="w-80 h-28 bg-white/30 rounded-3xl text-xl font-semibold leading-10 cursor-pointer hover:bg-white/40 transition-colors text-white"
+              >
+                홈으로 돌아가기
+              </button>
+            </div>
+          </section>
         )}
       </main>
     </div>
