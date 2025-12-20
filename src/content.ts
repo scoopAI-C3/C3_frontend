@@ -2,9 +2,9 @@ import type { AgentEvent, PlatformType } from './types/agent'
 
 function detectPlatform(): PlatformType | null {
   const host = window.location.hostname
-  if (host.includes('chatgpt.com')) return 'chatgpt'
-  if (host.includes('claude.ai')) return 'claude'
-  if (host.includes('gemini.google.com')) return 'gemini'
+  if (host.includes('chatgpt.com')) return 'chat.openai.com'
+  if (host.includes('claude.ai')) return 'claude.ai'
+  if (host.includes('gemini.google.com')) return 'gemini.google.com'
   return null
 }
 
@@ -54,42 +54,46 @@ function sendEvent(event: Omit<AgentEvent, 'timestamp' | 'platform'>) {
 }
 
 // 세션 시작
-sendEvent({ type: 'session_start', message: 'Session started' })
+sendEvent({ type: 'SESSION_START', message: 'Session started' })
 
 // 페이지 이탈 시 세션 종료
 window.addEventListener('beforeunload', () => {
-  sendEvent({ type: 'session_end', message: 'Session ended' })
+  sendEvent({ type: 'SESSION_END', message: 'Session ended' })
 })
 
 // AI 응답 상태 추적
 let isAiResponding = false
 let lastAiResponseStartTime = 0
 let lastAiResponseEndTime = 0
-const AI_EVENT_DEBOUNCE = 2000 
+const AI_EVENT_DEBOUNCE = 2000
 
 // 플랫폼별 셀렉터 정의
-const SELECTORS = {
-  chatgpt: {
+const SELECTORS: Record<PlatformType, {
+  userMessage: string
+  assistantMessage: string
+  streamingIndicator: string
+}> = {
+  'chat.openai.com': {
     userMessage: '[data-message-author-role="user"]',
     assistantMessage: '[data-message-author-role="assistant"]',
     streamingIndicator: 'button[aria-label="Stop generating"], button[data-testid="stop-button"], .result-streaming, [data-is-streaming="true"]'
   },
-  claude: {
+  'claude.ai': {
     userMessage: '[data-testid*="human"], [data-testid*="user"], .human-turn, .user-message, div[class*="human"], div[class*="user-turn"], [data-is-user-message="true"]',
     assistantMessage: '[data-testid*="assistant"], [data-testid*="claude"], .assistant-turn, .claude-message, div[class*="assistant"], div[class*="claude-turn"], [data-is-assistant-message="true"], [data-testid="message-content"]',
     streamingIndicator: '[data-is-streaming="true"]'
   },
-  gemini: {
+  'gemini.google.com': {
     userMessage: 'user-query, .user-query-text, [data-message-author-role="user"]',
     assistantMessage: 'model-response, .model-response-text, [data-message-author-role="model"]',
     streamingIndicator: '.bard-avatar.thinking, [aria-busy="true"], .markdown .pending, .markdown .animating'
   }
 }
 
-const INIT_DELAY = {
-  chatgpt: 3000,
-  claude: 2000,
-  gemini: 2000
+const INIT_DELAY: Record<PlatformType, number> = {
+  'chat.openai.com': 3000,
+  'claude.ai': 2000,
+  'gemini.google.com': 2000
 }
 
 const selectors = platform ? SELECTORS[platform] : null
@@ -103,7 +107,7 @@ function triggerUserMessage() {
   if (now - lastUserMessageTime < 1000) return
   lastUserMessageTime = now
   userMessageCount++
-  sendEvent({ type: 'user_message', message: `User sent message #${userMessageCount}` })
+  sendEvent({ type: 'PROMPT_SUBMIT', message: `User sent message #${userMessageCount}` })
 }
 
 // 사용자 메시지 전송 감지
@@ -173,7 +177,7 @@ function setupResponseDetection() {
       lastAssistantCount = currentAssistantCount
       console.log(`[HANDOFF] Streaming detected:`, streamingElement ? 'by indicator' : 'by message count')
       debugSelectors()
-      sendEvent({ type: 'ai_response_start', message: 'AI started responding' })
+      sendEvent({ type: 'AI_RESPONSE_START', message: 'AI started responding' })
     }
 
     // AI 응답 종료 감지
@@ -188,7 +192,7 @@ function setupResponseDetection() {
           isAiResponding = false
           lastAiResponseEndTime = checkTime
           lastAssistantCount = document.querySelectorAll(selectors.assistantMessage).length
-          sendEvent({ type: 'ai_response_end', message: 'AI finished responding' })
+          sendEvent({ type: 'AI_RESPONSE_END', message: 'AI finished responding' })
         }
       }, 1000)
     }
@@ -214,7 +218,7 @@ function setupResponseDetection() {
       lastAiResponseStartTime = now
       console.log('[HANDOFF] Polling detected streaming start')
       debugSelectors()
-      sendEvent({ type: 'ai_response_start', message: 'AI started responding' })
+      sendEvent({ type: 'AI_RESPONSE_START', message: 'AI started responding' })
     }
 
     if (isAiResponding && !streamingElement) {
@@ -225,7 +229,7 @@ function setupResponseDetection() {
       isAiResponding = false
       lastAiResponseEndTime = now
       console.log('[HANDOFF] Polling detected streaming end')
-      sendEvent({ type: 'ai_response_end', message: 'AI finished responding' })
+      sendEvent({ type: 'AI_RESPONSE_END', message: 'AI finished responding' })
     }
   }, 2000)
 }
