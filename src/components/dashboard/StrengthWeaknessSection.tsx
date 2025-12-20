@@ -10,11 +10,10 @@ interface StrengthWeaknessSectionProps {
 const StrengthWeaknessSection = ({
   detailStrengths,
   detailCautions,
-  tip: _tip,
 }: StrengthWeaknessSectionProps) => {
   return (
     <section
-      className="flex flex-col w-screen min-h-screen bg-cover bg-center bg-no-repeat py-20"
+      className="flex flex-col items center justify-center w-screen min-h-screen bg-cover bg-center bg-no-repeat py-20"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       <ScrollReveal animation="fadeUp" delay={0}>

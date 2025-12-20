@@ -68,7 +68,12 @@ const Dashboard = () => {
           />
         )}
         {sessionResult?.dailyTimeline && (
-          <TimelineSection dailyTimeline={sessionResult.dailyTimeline} />
+          <TimelineSection
+          sessionId={sessionResult.sessionId}
+            dailyTimeline={sessionResult.dailyTimeline}
+            relativeStyles={sessionResult.relativeStyles}
+            aiToolUsage={sessionResult.aiToolUsage}
+          />
         )}
       </main>
     </div>
