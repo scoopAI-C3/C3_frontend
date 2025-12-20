@@ -39,14 +39,12 @@ const scaleColors = [
   "#AE3AC8", // 5점
 ];
 
-// 유형 정의
+// 유형 정의 (4가지만 사용)
 export type CollaborationType =
   | 'AI-Driven Executor'
   | 'AI-Assisted Thinker'
   | 'AI Checker'
-  | 'Balanced Collaborator'
-  | 'AI-First Delegator'
-  | 'Human-Centered Controller';
+  | 'Balanced Collaborator';
 
 // API typeCode 매핑
 const typeCodeMap: Record<CollaborationType, string> = {
@@ -54,8 +52,6 @@ const typeCodeMap: Record<CollaborationType, string> = {
   'AI-Assisted Thinker': 'AI_ASSISTED_THINKER',
   'AI Checker': 'AI_CHECKER',
   'Balanced Collaborator': 'BALANCED_COLLABORATOR',
-  'AI-First Delegator': 'AI_FIRST_DELEGATOR',
-  'Human-Centered Controller': 'HUMAN_CENTERED_CONTROLLER',
 };
 
 // 점수 계산 함수
@@ -84,7 +80,7 @@ const calculateCollaborationType = (answers: Record<number, number>): {
   // AI-Driven ↔ Assisted: Q5 vs Q6 (Q5 높으면 AI-Driven, Q6 높으면 Assisted)
   const aiDrivenAssisted = normalize(5) - normalize(6); // -1 ~ +1
 
-  // 유형별 점수 계산
+  // 유형별 점수 계산 (4가지 유형만)
   const scores: Record<CollaborationType, number> = {
     // AI-Driven Executor: Q2, Q3, Q5, Q10 높음
     'AI-Driven Executor': (normalize(2) + normalize(3) + normalize(5) + normalize(10)) / 4,
@@ -97,12 +93,6 @@ const calculateCollaborationType = (answers: Record<number, number>): {
 
     // Balanced Collaborator: Q1, Q6, Q9 높음
     'Balanced Collaborator': (normalize(1) + normalize(6) + normalize(9)) / 3,
-
-    // AI-First Delegator: Q2, Q5, Q10 높음
-    'AI-First Delegator': (normalize(2) + normalize(5) + normalize(10)) / 3,
-
-    // Human-Centered Controller: Q6, Q8 높음
-    'Human-Centered Controller': (normalize(6) + normalize(8)) / 2,
   };
 
   // Q9가 높고 극단값이 낮으면 Balanced Collaborator 보정
