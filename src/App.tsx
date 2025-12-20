@@ -18,7 +18,7 @@ function App() {
         <Route path="/survey-intro" element={<SurveyIntroPage />} />
         <Route path="/survey" element={<SurveyPage />} />
         <Route path="/report" element={<ReportPage />} />
-        <Route path="/shared/:shareToken" element={<SharedPage />} />
+        <Route path="/share/:shareToken" element={<SharedPage />} />
       </Routes>
     </HashRouter>
   )
