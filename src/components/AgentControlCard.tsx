@@ -1,24 +1,90 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-interface Event {
-  time: string;
-  message: string;
-}
+import type { AgentEvent, AgentStatusType, RiskType, DisplayEvent } from "../types/agent";
 
 function AgentControlCard() {
   const navigate = useNavigate();
   const [isMonitoring, setIsMonitoring] = useState(true);
-  const [agentStatus] = useState<
-    "Observing" | "Approaching Decision Boundary" | "Intervention Triggered"
-  >("Observing");
-  const [decisionRisk] = useState<"High" | "Medium" | "Low">("High");
+  const [agentStatus, setAgentStatus] = useState<AgentStatusType>("Inactive");
+  const [decisionRisk, setDecisionRisk] = useState<RiskType>("Low");
+  const [recentEvents, setRecentEvents] = useState<DisplayEvent[]>([]);
 
-  const recentEvents: Event[] = [
-    { time: "09:37", message: "Intervention triggered" },
-    { time: "09:37", message: "Decision Boundary detected" },
-    { time: "09:37", message: "Session: Active" },
-  ];
+  // 모니터링 토글 핸들러
+  const handleMonitoringToggle = async () => {
+    const newValue = !isMonitoring;
+    setIsMonitoring(newValue);
+    await chrome.storage.local.set({ isMonitoring: newValue });
+
+    if (!newValue) {
+      await chrome.storage.local.set({
+        agentStatus: 'Inactive',
+        decisionRisk: 'Low'
+      });
+    }
+  };
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const data = await chrome.storage.local.get(['events', 'agentStatus', 'decisionRisk', 'isMonitoring']) as {
+          events?: AgentEvent[];
+          agentStatus?: AgentStatusType;
+          decisionRisk?: RiskType;
+          isMonitoring?: boolean;
+        };
+
+        if (data.isMonitoring !== undefined) {
+          setIsMonitoring(data.isMonitoring);
+        } else {
+          await chrome.storage.local.set({ isMonitoring: true });
+        }
+
+        if (data.agentStatus) {
+          setAgentStatus(data.agentStatus);
+        }
+        if (data.decisionRisk) {
+          setDecisionRisk(data.decisionRisk);
+        }
+        if (data.events && Array.isArray(data.events)) {
+          const displayEvents: DisplayEvent[] = data.events.slice(0, 5).map((event: AgentEvent) => ({
+            time: new Date(event.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+            message: event.message
+          }));
+          setRecentEvents(displayEvents);
+        }
+      } catch (err) {
+        console.error('[HANDOFF] Failed to load events:', err);
+      }
+    };
+
+    loadEvents();
+
+    // storage 변경 감지
+    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+      if (changes.events?.newValue && Array.isArray(changes.events.newValue)) {
+        const displayEvents: DisplayEvent[] = changes.events.newValue.slice(0, 5).map((event: AgentEvent) => ({
+          time: new Date(event.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+          message: event.message
+        }));
+        setRecentEvents(displayEvents);
+      }
+      if (changes.agentStatus?.newValue) {
+        setAgentStatus(changes.agentStatus.newValue as AgentStatusType);
+      }
+      if (changes.decisionRisk?.newValue) {
+        setDecisionRisk(changes.decisionRisk.newValue as RiskType);
+      }
+      if (changes.isMonitoring?.newValue !== undefined) {
+        setIsMonitoring(changes.isMonitoring.newValue as boolean);
+      }
+    };
+
+    chrome.storage.onChanged.addListener(handleStorageChange);
+
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
+  }, []);
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
@@ -41,6 +107,8 @@ function AgentControlCard() {
         return { dot: "bg-yellow-500", text: "text-yellow-500" };
       case "Observing":
         return { dot: "bg-[#0FB900]", text: "text-[#0FB900]" };
+      case "Inactive":
+        return { dot: "bg-gray-400", text: "text-gray-400" };
       default:
         return { dot: "bg-gray-500", text: "text-gray-500" };
     }
@@ -57,7 +125,7 @@ function AgentControlCard() {
         <div className="flex items-center justify-between mb-4">
           <span className="text-base font-medium text-black">Monitoring</span>
           <button
-            onClick={() => setIsMonitoring(!isMonitoring)}
+            onClick={handleMonitoringToggle}
             className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
               isMonitoring ? "bg-[#9130FF]" : "bg-gray-300"
             }`}
