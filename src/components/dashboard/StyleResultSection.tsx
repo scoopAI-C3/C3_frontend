@@ -3,6 +3,7 @@ import ScrollReveal from "../ScrollReveal";
 import bgImage from "../../assets/bg.svg";
 import TextLogo from "../../assets/TextLogo.png";
 import type { PrimaryStyle, StyleDetail } from "../../types/session";
+import { useNavigate } from "react-router-dom";
 
 interface StyleResultSectionProps {
   primaryStyle: PrimaryStyle;
@@ -10,13 +11,14 @@ interface StyleResultSectionProps {
 }
 
 const StyleResultSection = ({ primaryStyle, styleDetail }: StyleResultSectionProps) => {
+  const navigate = useNavigate();
   return (
     <section
       className="flex flex-col items-center w-screen min-h-screen bg-cover bg-center bg-no-repeat py-20"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
-      <header className="flex items-center justify-start w-full px-12 pb-10">
-        <img className="w-44 h-9" src={TextLogo} alt="Text Logo" />
+      <header className="flex items-center justify-start w-full px-12 pb-10 cursor-pointer">
+        <img className="w-44 h-9 cursor-pointer" onClick={() => navigate('/landing')} src={TextLogo} alt="Text Logo" />
       </header>
       <div className="flex flex-col items-start w-[676px]">
         <ScrollReveal animation="fadeUp" delay={0}>

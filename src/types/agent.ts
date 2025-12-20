@@ -5,7 +5,7 @@ export type EventType =
   | 'AI_RESPONSE_START'
   | 'AI_RESPONSE_END'
 
-export type PlatformType = 'chat.openai.com' | 'claude.ai' | 'gemini.google.com'
+export type PlatformType = 'chat.openai.com' | 'claude.ai' | 'gemini.google.com' | 'copilot.microsoft.com'
 
 export interface AgentEvent {
   type: EventType

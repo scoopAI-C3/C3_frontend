@@ -5,6 +5,7 @@ function detectPlatform(): PlatformType | null {
   if (host.includes('chatgpt.com')) return 'chat.openai.com'
   if (host.includes('claude.ai')) return 'claude.ai'
   if (host.includes('gemini.google.com')) return 'gemini.google.com'
+  if (host.includes('copilot.microsoft.com')) return 'copilot.microsoft.com'
   return null
 }
 
@@ -87,13 +88,19 @@ const SELECTORS: Record<PlatformType, {
     userMessage: 'user-query, .user-query-text, [data-message-author-role="user"]',
     assistantMessage: 'model-response, .model-response-text, [data-message-author-role="model"]',
     streamingIndicator: '.bard-avatar.thinking, [aria-busy="true"], .markdown .pending, .markdown .animating'
+  },
+  'copilot.microsoft.com': {
+    userMessage: '[data-content="user-message"], .user-message, [class*="UserMessage"], cib-message-group[source="user"]',
+    assistantMessage: '[data-content="ai-message"], .ai-message, [class*="BotMessage"], cib-message-group[source="bot"]',
+    streamingIndicator: '[data-is-streaming="true"], .typing-indicator, [class*="typing"], cib-typing-indicator, [aria-busy="true"]'
   }
 }
 
 const INIT_DELAY: Record<PlatformType, number> = {
   'chat.openai.com': 3000,
   'claude.ai': 2000,
-  'gemini.google.com': 2000
+  'gemini.google.com': 2000,
+  'copilot.microsoft.com': 3000
 }
 
 const selectors = platform ? SELECTORS[platform] : null

@@ -28,6 +28,17 @@ const Dashboard = () => {
           }
         }
 
+        // 먼저 localStorage에서 sharedSessionId 확인 (공유 페이지에서 온 경우)
+        const sharedSessionId = localStorage.getItem("sharedSessionId");
+        if (sharedSessionId) {
+          const response = await getSessionResult(sharedSessionId);
+          if (response.isSuccess) {
+            setSessionResult(response.result);
+          }
+          setLoading(false);
+          return;
+        }
+
         // 웹 환경인지 확인
         if (typeof chrome === "undefined" || !chrome.storage || !chrome.storage.local) {
           console.log("Web environment detected: Skipping chrome.storage access.");
