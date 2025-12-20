@@ -28,7 +28,13 @@ const Dashboard = () => {
           }
         }
 
-        // 기존 로직 - 세션 기반 API 호출
+        // 웹 환경인지 확인
+        if (typeof chrome === "undefined" || !chrome.storage || !chrome.storage.local) {
+          console.log("Web environment detected: Skipping chrome.storage access.");
+          setLoading(false);
+          return;
+        }
+
         const data = (await chrome.storage.local.get([
           "sessionId",
         ])) as { sessionId?: string };
