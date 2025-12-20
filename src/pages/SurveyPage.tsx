@@ -218,36 +218,27 @@ const SurveyPage = () => {
 
         {/* Likert Scale */}
         <div className="w-full max-w-[983px]">
-          {/* Scale Line + Points */}
-          <div className="relative flex items-center justify-between">
+          {/* Scale Line + Points + Labels */}
+          <div className="relative flex items-start justify-between">
             {/* Background Line */}
-            <div className="absolute left-[18px] right-[18px] h-[5px] bg-[#482D71] rounded-full" />
+            <div className="absolute left-[18px] right-[18px] top-[16px] h-[5px] bg-[#482D71] rounded-full" />
 
-            {/* Scale Points */}
+            {/* Scale Points with Labels */}
             {[1, 2, 3, 4, 5].map((value, index) => (
-              <button
-                key={value}
-                onClick={() => handleAnswer(question.id, value)}
-                className="relative z-10 w-[37px] h-[37px] rounded-full transition-all duration-200 cursor-pointer"
-                style={{
-                  backgroundColor: scaleColors[index],
-                  boxShadow: selectedValue === value ? '0 0 0 5px white' : 'none',
-                  transform: selectedValue === value ? 'scale(1.1)' : 'scale(1)',
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Scale Labels */}
-          <div className="flex justify-between mt-[23px]">
-            {scaleLabels.map((label, index) => (
-              <span
-                key={index}
-                className="text-white text-[14px] font-bold font-[NanumSquareRoundOTF] text-center"
-                style={{ width: index === 0 || index === 4 ? '100px' : index === 2 ? '60px' : '80px' }}
-              >
-                {label}
-              </span>
+              <div key={value} className="flex flex-col items-center">
+                <button
+                  onClick={() => handleAnswer(question.id, value)}
+                  className="relative z-10 w-[37px] h-[37px] rounded-full transition-all duration-200 cursor-pointer"
+                  style={{
+                    backgroundColor: scaleColors[index],
+                    boxShadow: selectedValue === value ? '0 0 0 5px white' : 'none',
+                    transform: selectedValue === value ? 'scale(1.1)' : 'scale(1)',
+                  }}
+                />
+                <span className="mt-[23px] text-white text-[14px] font-bold font-[NanumSquareRoundOTF] text-center whitespace-nowrap">
+                  {scaleLabels[index]}
+                </span>
+              </div>
             ))}
           </div>
         </div>
