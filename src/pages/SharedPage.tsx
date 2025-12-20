@@ -24,6 +24,10 @@ const SharedPage = () => {
 
         if (response.isSuccess && response.result) {
           setSessionResult(response.result.result);
+          // 공유 페이지에서도 sessionId를 localStorage에 저장하여 ReportPage, Dashboard에서 사용
+          if (response.result.result.sessionId) {
+            localStorage.setItem("sharedSessionId", response.result.result.sessionId);
+          }
         } else {
           setError(true);
         }

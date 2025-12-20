@@ -104,29 +104,31 @@ const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage
             </div>
 
             <div className="flex flex-col bg-white/5 font-[Inter] px-7 py-6 w-full rounded-lg">
-              <h2 className="text-2xl font-normal mb-6 text-white">AI Tool Usage</h2>
-              <div className="flex items-center justify-center gap-6">
+              <h2 className="text-2xl font-normal text-white mb-4">AI Tool Usage</h2>
+              <div className="flex flex-row items-center justify-between h-full pl-2 pr-4">
+                <div className="flex flex-col gap-4">
+                  {toolEntries.map(([tool, value], index) => (
+                    <div key={tool} className="flex items-center gap-3">
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: TOOL_COLORS[index % TOOL_COLORS.length] }}
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-white text-sm font-medium">{tool}</span>
+                        <span className="text-white/50 text-xs">{Math.round(value * 100)}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 <div
-                  className="w-24 h-24 rounded-full relative"
+                  className="w-40 h-40 rounded-full relative shrink-0" 
                   style={{ 
                     background: generatePieGradient(),
                     maskImage: "radial-gradient(transparent 55%, black 56%)",
                     WebkitMaskImage: "radial-gradient(transparent 55%, black 56%)"
                   }}
                 />
-                
-                <div className="flex flex-col gap-2">
-                  {toolEntries.map(([tool, value], index) => (
-                    <div key={tool} className="flex items-center gap-2 text-xs">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: TOOL_COLORS[index % TOOL_COLORS.length] }}
-                      />
-                      <span className="text-white/70">{tool}</span>
-                      <span className="text-white/50">{Math.round(value * 100)}%</span>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
@@ -140,7 +142,13 @@ const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage
               {isSharing ? "Creating Link..." : "Share"}
             </button>
             <button
-              onClick={() => navigate('/report')}
+              onClick={() => {
+                // sessionId를 localStorage에 저장하여 ReportPage에서 사용
+                if (sessionId) {
+                  localStorage.setItem("sharedSessionId", sessionId);
+                }
+                navigate('/report');
+              }}
               className="w-80 h-28 bg-white/30 rounded-3xl text-xl font-semibold leading-10 cursor-pointer hover:bg-white/40 transition-colors text-white"
             >
               분석 리포트 보기

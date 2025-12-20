@@ -16,7 +16,7 @@ const LandingPage = () => {
   return (
     <div className="flex flex-col items-center justify-start w-screen h-screen bg-[#211F26] py-10">
       <header className="flex items-center justify-between w-full px-12 pb-10">
-        <img className="w-44 h-9" src={TextLogo} alt="Text Logo" />
+        <img className="w-44 h-9 cursor-pointer" onClick={() => navigate('/landing')} src={TextLogo} alt="Text Logo" />
         <h3 className="text-white/70 text-base font-bold cursor-pointer">KR</h3>
       </header>
       <main className="flex flex-col items-center font-[NanumSquareRound] text-white">
@@ -31,7 +31,7 @@ const LandingPage = () => {
             <button className='flex flex-row items-center justify-between gap-5 px-8 py-6 bg-gradient-to-r from-fuchsia-400 to-purple-500 rounded-3xl text-xl font-semibold leading-10 cursor-pointer' onClick={handleAnalyze}>Start Observation
               <img className="w-6 h-6 bg-blend-color-dodge" src={Arrow} alt="Arrow" />
             </button>
-            <button className="px-8 py-6 rounded-3xl bg-white border-[3px] border-[#DFDFDF] text-xl font-semibold text-[#979797] cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => navigate('/survey-intro')}>View Demo Result</button>
+            <button className="px-8 py-6 rounded-3xl bg-white border-[3px] border-[#DFDFDF] text-xl font-semibold text-[#979797] cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => navigate('/survey-intro')}>Survey</button>
         </div>
       </main>
     </div>

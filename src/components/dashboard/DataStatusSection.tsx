@@ -13,10 +13,48 @@ interface DataStatusSectionProps {
   aiToolUsage: Record<string, number> | null;
 }
 
+const translateAiUsageFrequency = (value: string): string => {
+  const map: Record<string, string> = {
+    high: "높음",
+    medium: "중간",
+    low: "낮음",
+  };
+  return map[value.toLowerCase()] || value;
+};
+
+const translatePromptInterval = (value: string): string => {
+  const map: Record<string, string> = {
+    short: "짧음",
+    medium: "중간",
+    long: "긴 편",
+  };
+  return map[value.toLowerCase()] || value;
+};
+
+const translateRefinementRate = (value: string): string => {
+  const map: Record<string, string> = {
+    low: "낮음",
+    medium: "중간",
+    high: "높음",
+  };
+  return map[value.toLowerCase()] || value;
+};
+
+const translateDecisionEventFrequency = (value: string): string => {
+  const map: Record<string, string> = {
+    high: "많음",
+    medium: "보통",
+    low: "적음",
+    many: "많음",
+    few: "적음",
+  };
+  return map[value.toLowerCase()] || value;
+};
+
 const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
   const cardContainerClass = "relative flex items-center justify-center w-[180px] h-[240px]";
   const textContainerClass = "relative z-10 flex flex-col items-center pt-14 px-6 pb-7 w-full h-full justify-between";
-  const titleClass = "text-xl font-bold leading-tight text-center break-keep min-h-[50px] flex items-center justify-center";
+  const titleClass = "mt-2 text-xl font-bold leading-tight text-center break-keep flex items-center justify-center whitespace-nowrap";
   const valueClass = "text-xl font-bold leading-10 text-[#FF69FA]";
 
   return (
@@ -31,13 +69,13 @@ const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
           </h2>
           
   
-          <div className="w-fit text-white/50 flex flex-row gap-7 flex-wrap">
+          <div className="w-fit text-white flex flex-row gap-7 flex-wrap">
             <div className={cardContainerClass}>
               <img src={Rectangle} alt="Background" className="absolute inset-0 w-full h-full object-fill" />
               <div className={textContainerClass}>
                 <img className="w-16 h-16 mb-2" src={AIExecutor} alt="AI Executor" />
                 <p className={titleClass}>AI 사용 빈도</p>
-                <p className={valueClass}>{dataSummary.aiUsageFrequency}</p>
+                <p className={valueClass}>{translateAiUsageFrequency(dataSummary.aiUsageFrequency)}</p>
               </div>
             </div>
 
@@ -46,7 +84,7 @@ const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
               <div className={textContainerClass}>
                 <img className="w-16 h-16 mb-2" src={Question} alt="Question" />
                 <p className={titleClass}>질문 간 평균 간격</p>
-                <p className={valueClass}>{dataSummary.avgPromptInterval}</p>
+                <p className={valueClass}>{translatePromptInterval(dataSummary.avgPromptInterval)}</p>
               </div>
             </div>
 
@@ -55,7 +93,7 @@ const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
               <div className={textContainerClass}>
                 <img className="w-16 h-16 mb-2" src={Edit} alt="Edit" />
                 <p className={titleClass}>수정/재질문 비율</p>
-                <p className={valueClass}>{dataSummary.refinementRate}</p>
+                <p className={valueClass}>{translateRefinementRate(dataSummary.refinementRate)}</p>
               </div>
             </div>
 
@@ -63,8 +101,9 @@ const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
               <img src={Rectangle} alt="Background" className="absolute inset-0 w-full h-full object-fill" />
               <div className={textContainerClass}>
                 <img className="w-16 h-16 mb-2" src={DecisionEvent} alt="Decision Event" />
-                <p className={titleClass}>Decision Event 발생 빈도</p>
-                <p className={valueClass}>{dataSummary.decisionEventFrequency}</p>
+                <p className={titleClass}>Decision Event</p>
+                <p className="text-white leading-3 font-bold">발생빈도</p>
+                <p className={valueClass}>{translateDecisionEventFrequency(dataSummary.decisionEventFrequency)}</p>
               </div>
             </div>
           </div>
