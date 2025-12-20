@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import type { AgentEvent, AgentStatusType, RiskType, DisplayEvent } from "../types/agent";
 
 function AgentControlCard() {
-  const navigate = useNavigate();
   const [isMonitoring, setIsMonitoring] = useState(true);
   const [agentStatus, setAgentStatus] = useState<AgentStatusType>("Inactive");
   const [decisionRisk, setDecisionRisk] = useState<RiskType>("Low");
@@ -174,7 +172,7 @@ function AgentControlCard() {
 
       <button
         className="w-full mt-6 py-3 text-sm text-purple-600 hover:text-purple-700 font-medium hover:bg-purple-50 rounded-lg transition-colors"
-        onClick={() => navigate("/dashboard")}
+        onClick={() => chrome.tabs.create({ url: chrome.runtime.getURL('index.html#/landing') })}
       >
         Open Full Dashboard →
       </button>
