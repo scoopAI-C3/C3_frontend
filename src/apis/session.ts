@@ -10,7 +10,9 @@ import type {
   RecentSessionsResult,
   AICollaborationType,
   AICollaborationTypeListResult,
-  AICollaborationTypeDetail
+  AICollaborationTypeDetail,
+  SurveyResultData,
+  SessionGraphData
 } from '../types/agent';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -66,5 +68,15 @@ export const getAICollaborationTypeDetail = async (typeCode: string): Promise<Ap
 
 export const getAllAICollaborationTypesDetails = async (): Promise<ApiResponse<AICollaborationTypeDetail[]>> => {
   const { data } = await axios.get(`${API_URL}/api/ai-collaboration-types/all/details`);
+  return data;
+};
+
+export const getSurveyResult = async (typeCode: string): Promise<ApiResponse<SurveyResultData>> => {
+  const { data } = await axios.get(`${API_URL}/api/ai-collaboration-types/${typeCode}/survey-result`);
+  return data;
+};
+
+export const getSessionGraph = async (sessionId: string): Promise<ApiResponse<SessionGraphData>> => {
+  const { data } = await axios.get(`${API_URL}/api/session/graph/${sessionId}`);
   return data;
 };

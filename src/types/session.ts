@@ -145,3 +145,50 @@ export interface SessionObserveRequest {
 export interface SessionAnalyzeRequest {
   sessionId: string
 }
+
+// Survey Result (설문 결과 API 응답)
+export interface SurveyResultData {
+  primaryStyle: PrimaryStyle
+  styleDetail: StyleDetail
+  dataSummary: DataSummary
+  strengths: string[]
+  cautions: string[]
+}
+
+// Graph API 타입 정의
+export interface GraphExecution {
+  nodesExecuted: string[]
+  executionTime: number
+  errors: string[]
+}
+
+export interface GraphMetrics {
+  totalPrompts: number
+  avgInterval: number
+  refinementLoops: number
+  decisionBoundaries: number
+  avgPromptLength: number
+  eventCount: number
+  eventTypeDistribution: Record<string, number>
+}
+
+export interface PatternDetail {
+  level: string
+  score: number
+  description: string
+}
+
+export interface GraphPatterns {
+  prompt: PatternDetail
+  interval: PatternDetail
+  refinement: PatternDetail
+}
+
+export interface SessionGraphData {
+  sessionId: string
+  graphExecution: GraphExecution
+  metrics: GraphMetrics
+  patterns: GraphPatterns
+  llmInsights: string[]
+  patternInsights: string[]
+}

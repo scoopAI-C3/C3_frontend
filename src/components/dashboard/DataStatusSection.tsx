@@ -9,8 +9,8 @@ import Rectangle from "../../assets/Rectangle.svg";
 
 interface DataStatusSectionProps {
   dataSummary: DataSummary;
-  relativeStyles: Record<string, number>;
-  aiToolUsage: Record<string, number>;
+  relativeStyles: Record<string, number> | null;
+  aiToolUsage: Record<string, number> | null;
 }
 
 const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
@@ -24,9 +24,9 @@ const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
       className="flex flex-col justify-center w-screen min-h-screen bg-cover bg-center bg-no-repeat py-20"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
-      <div className="flex flex-col items-start justify-center w-full px-[55px]">
-        <ScrollReveal animation="fadeUp" delay={0} className="w-fit flex flex-col items-start">
-          <h2 className="w-full text-3xl font-bold mb-15 text-white">
+      <div className="flex flex-col items-center justify-center w-full px-[55px]">
+        <ScrollReveal animation="fadeUp" delay={0} className="w-fit flex flex-col items-center">
+          <h2 className="w-full text-3xl font-bold mb-15 text-white text-center">
             데이터가 이렇게 말하고 있어요
           </h2>
           
