@@ -113,7 +113,7 @@ function AgentControlCard() {
   };
   const statusStyle = getStatusStyle(agentStatus);
   return (
-    <div className="flex flex-col w-[540px] h-[720px] bg-[#211F26] p-10 gap-5 font-[Inter]">
+    <div className="flex flex-col w-[360px] h-[500px] bg-[#211F26] p-10 gap-5 font-[Inter] overflow-y-auto scrollbar-hide">
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl border-2 border-[#A36EFF] bg-[#2B2930] flex items-center justify-center">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
