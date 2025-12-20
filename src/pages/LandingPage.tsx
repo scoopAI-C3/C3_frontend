@@ -31,7 +31,7 @@ const LandingPage = () => {
             <button className='flex flex-row items-center justify-between gap-5 px-8 py-6 bg-gradient-to-r from-fuchsia-400 to-purple-500 rounded-3xl text-xl font-semibold leading-10 cursor-pointer' onClick={handleAnalyze}>Start Observation
               <img className="w-6 h-6 bg-blend-color-dodge" src={Arrow} alt="Arrow" />
             </button>
-            <button className="px-8 py-6 rounded-3xl bg-white border-[3px] border-[#DFDFDF] text-xl font-semibold text-[#979797] cursor-pointer">View Demo Result</button>
+            <button className="px-8 py-6 rounded-3xl bg-white border-[3px] border-[#DFDFDF] text-xl font-semibold text-[#979797] cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => navigate('/survey-intro')}>View Demo Result</button>
         </div>
       </main>
     </div>

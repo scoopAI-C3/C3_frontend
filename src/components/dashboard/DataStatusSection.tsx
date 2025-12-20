@@ -9,8 +9,8 @@ import Rectangle from "../../assets/Rectangle.svg";
 
 interface DataStatusSectionProps {
   dataSummary: DataSummary;
-  relativeStyles: Record<string, number>;
-  aiToolUsage: Record<string, number>;
+  relativeStyles: Record<string, number> | null;
+  aiToolUsage: Record<string, number> | null;
 }
 
 const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
