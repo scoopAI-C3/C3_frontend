@@ -1,5 +1,6 @@
 import ScrollReveal from "../ScrollReveal";
 import bgImage from "../../assets/bg3.svg";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface StrengthWeaknessSectionProps {
   detailStrengths: string[];
@@ -11,6 +12,8 @@ const StrengthWeaknessSection = ({
   detailStrengths,
   detailCautions,
 }: StrengthWeaknessSectionProps) => {
+  const { language } = useLanguage();
+
   return (
     <section
       className="flex flex-col items center justify-center w-screen min-h-screen bg-cover bg-center bg-no-repeat py-20"
@@ -21,7 +24,9 @@ const StrengthWeaknessSection = ({
           <div className="w-1 bg-white/70 mr-8 self-stretch"></div>
           <div className="flex flex-col">
             <h2 className="text-fuchsia-400 text-3xl font-extrabold font-[Inter] mb-4">
-              이 협업 스타일은 이런 상황에서 강합니다
+              {language === 'ko'
+                ? '이 협업 스타일은 이런 상황에서 강합니다'
+                : 'This collaboration style excels in these situations'}
             </h2>
             <ul className="text-white/70 list-disc list-inside text-lg">
               {detailStrengths.map((strength, index) => (
@@ -37,7 +42,9 @@ const StrengthWeaknessSection = ({
           <div className="w-1 bg-white/70 mr-8 self-stretch"></div>
           <div className="flex flex-col">
             <h2 className="text-white text-3xl font-extrabold font-[Inter] mb-4">
-              이런 상황에서는 주의가 필요합니다
+              {language === 'ko'
+                ? '이런 상황에서는 주의가 필요합니다'
+                : 'Be cautious in these situations'}
             </h2>
             <ul className="text-white/70 list-disc list-inside text-lg">
               {detailCautions.map((caution, index) => (

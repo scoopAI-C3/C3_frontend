@@ -6,6 +6,7 @@ import Question from "../../assets/Question.svg";
 import Edit from "../../assets/Edit.svg";
 import DecisionEvent from "../../assets/DecisionEvent.svg";
 import Rectangle from "../../assets/Rectangle.svg";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface DataStatusSectionProps {
   dataSummary: DataSummary;
@@ -13,45 +14,36 @@ interface DataStatusSectionProps {
   aiToolUsage: Record<string, number> | null;
 }
 
-const translateAiUsageFrequency = (value: string): string => {
-  const map: Record<string, string> = {
-    high: "높음",
-    medium: "중간",
-    low: "낮음",
-  };
+const translateAiUsageFrequency = (value: string, lang: string): string => {
+  const mapKo: Record<string, string> = { high: "높음", medium: "중간", low: "낮음" };
+  const mapEn: Record<string, string> = { high: "High", medium: "Medium", low: "Low" };
+  const map = lang === 'ko' ? mapKo : mapEn;
   return map[value.toLowerCase()] || value;
 };
 
-const translatePromptInterval = (value: string): string => {
-  const map: Record<string, string> = {
-    short: "짧음",
-    medium: "중간",
-    long: "긴 편",
-  };
+const translatePromptInterval = (value: string, lang: string): string => {
+  const mapKo: Record<string, string> = { short: "짧음", medium: "중간", long: "긴 편" };
+  const mapEn: Record<string, string> = { short: "Short", medium: "Medium", long: "Long" };
+  const map = lang === 'ko' ? mapKo : mapEn;
   return map[value.toLowerCase()] || value;
 };
 
-const translateRefinementRate = (value: string): string => {
-  const map: Record<string, string> = {
-    low: "낮음",
-    medium: "중간",
-    high: "높음",
-  };
+const translateRefinementRate = (value: string, lang: string): string => {
+  const mapKo: Record<string, string> = { low: "낮음", medium: "중간", high: "높음" };
+  const mapEn: Record<string, string> = { low: "Low", medium: "Medium", high: "High" };
+  const map = lang === 'ko' ? mapKo : mapEn;
   return map[value.toLowerCase()] || value;
 };
 
-const translateDecisionEventFrequency = (value: string): string => {
-  const map: Record<string, string> = {
-    high: "많음",
-    medium: "보통",
-    low: "적음",
-    many: "많음",
-    few: "적음",
-  };
+const translateDecisionEventFrequency = (value: string, lang: string): string => {
+  const mapKo: Record<string, string> = { high: "많음", medium: "보통", low: "적음", many: "많음", few: "적음" };
+  const mapEn: Record<string, string> = { high: "High", medium: "Medium", low: "Low", many: "Many", few: "Few" };
+  const map = lang === 'ko' ? mapKo : mapEn;
   return map[value.toLowerCase()] || value;
 };
 
 const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
+  const { language } = useLanguage();
   const cardContainerClass = "relative flex items-center justify-center w-[180px] h-[240px]";
   const textContainerClass = "relative z-10 flex flex-col items-center pt-14 px-6 pb-7 w-full h-full justify-between";
   const titleClass = "mt-2 text-xl font-bold leading-tight text-center break-keep flex items-center justify-center whitespace-nowrap";
@@ -65,17 +57,17 @@ const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
       <div className="flex flex-col items-center justify-center w-full">
         <ScrollReveal animation="fadeUp" delay={0} className="w-fit flex flex-col items-center">
           <h2 className="w-full text-3xl font-bold mb-15 text-white text-left">
-            데이터가 이렇게 말하고 있어요
+            {language === 'ko' ? '데이터가 이렇게 말하고 있어요' : 'This is what the data says'}
           </h2>
-          
-  
+
+
           <div className="w-fit text-white flex flex-row gap-7 flex-wrap">
             <div className={cardContainerClass}>
               <img src={Rectangle} alt="Background" className="absolute inset-0 w-full h-full object-fill" />
               <div className={textContainerClass}>
                 <img className="w-16 h-16 mb-2" src={AIExecutor} alt="AI Executor" />
-                <p className={titleClass}>AI 사용 빈도</p>
-                <p className={valueClass}>{translateAiUsageFrequency(dataSummary.aiUsageFrequency)}</p>
+                <p className={titleClass}>{language === 'ko' ? 'AI 사용 빈도' : 'AI Usage'}</p>
+                <p className={valueClass}>{translateAiUsageFrequency(dataSummary.aiUsageFrequency, language)}</p>
               </div>
             </div>
 
@@ -83,8 +75,8 @@ const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
               <img src={Rectangle} alt="Background" className="absolute inset-0 w-full h-full object-fill" />
               <div className={textContainerClass}>
                 <img className="w-16 h-16 mb-2" src={Question} alt="Question" />
-                <p className={titleClass}>질문 간 평균 간격</p>
-                <p className={valueClass}>{translatePromptInterval(dataSummary.avgPromptInterval)}</p>
+                <p className={titleClass}>{language === 'ko' ? '질문 간 평균 간격' : 'Avg. Interval'}</p>
+                <p className={valueClass}>{translatePromptInterval(dataSummary.avgPromptInterval, language)}</p>
               </div>
             </div>
 
@@ -92,8 +84,8 @@ const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
               <img src={Rectangle} alt="Background" className="absolute inset-0 w-full h-full object-fill" />
               <div className={textContainerClass}>
                 <img className="w-16 h-16 mb-2" src={Edit} alt="Edit" />
-                <p className={titleClass}>수정/재질문 비율</p>
-                <p className={valueClass}>{translateRefinementRate(dataSummary.refinementRate)}</p>
+                <p className={titleClass}>{language === 'ko' ? '수정/재질문 비율' : 'Refinement Rate'}</p>
+                <p className={valueClass}>{translateRefinementRate(dataSummary.refinementRate, language)}</p>
               </div>
             </div>
 
@@ -101,8 +93,8 @@ const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
               <img src={Rectangle} alt="Background" className="absolute inset-0 w-full h-full object-fill" />
               <div className={textContainerClass}>
                 <img className="w-16 h-16 mb-2" src={DecisionEvent} alt="Decision Event" />
-                <p className={titleClass}>발생 빈도</p>
-                <p className={valueClass}>{translateDecisionEventFrequency(dataSummary.decisionEventFrequency)}</p>
+                <p className={titleClass}>{language === 'ko' ? '발생 빈도' : 'Event Freq.'}</p>
+                <p className={valueClass}>{translateDecisionEventFrequency(dataSummary.decisionEventFrequency, language)}</p>
               </div>
             </div>
           </div>

@@ -4,8 +4,9 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { getSessionGraph } from "../apis/session";
 import type { SessionGraphData } from "../types/session";
 import reportBg from "../assets/reportBg.png";
+import { useLanguage } from "../contexts/LanguageContext";
 
-const nodeNameMap: Record<string, string> = {
+const nodeNameMapKo: Record<string, string> = {
   extract_metrics: "지표 추출",
   analyze_patterns: "패턴 분석",
   behavior_scoring: "행동 점수화",
@@ -14,12 +15,29 @@ const nodeNameMap: Record<string, string> = {
   generate_report: "리포트 생성",
 };
 
-const levelNameMap: Record<string, string> = {
+const nodeNameMapEn: Record<string, string> = {
+  extract_metrics: "Extract Metrics",
+  analyze_patterns: "Analyze Patterns",
+  behavior_scoring: "Behavior Scoring",
+  llm_analysis: "AI Analysis",
+  determine_style: "Determine Style",
+  generate_report: "Generate Report",
+};
+
+const levelNameMapKo: Record<string, string> = {
   high: "높음",
   medium: "보통",
   low: "낮음",
   short: "낮음",
   long: "높음",
+};
+
+const levelNameMapEn: Record<string, string> = {
+  high: "High",
+  medium: "Medium",
+  low: "Low",
+  short: "Low",
+  long: "High",
 };
 
 const getLevelTagStyle = (level: string): React.CSSProperties => {
@@ -49,9 +67,13 @@ const getLevelTagStyle = (level: string): React.CSSProperties => {
 
 const ReportPage = () => {
   const navigate = useNavigate();
+  const { language } = useLanguage();
   const [graphData, setGraphData] = useState<SessionGraphData | null>(null);
   const [loading, setLoading] = useState(true);
   const [sessionId, setSessionId] = useState<string>("");
+
+  const nodeNameMap = language === 'ko' ? nodeNameMapKo : nodeNameMapEn;
+  const levelNameMap = language === 'ko' ? levelNameMapKo : levelNameMapEn;
 
   useEffect(() => {
     const fetchGraphData = async () => {
@@ -70,7 +92,7 @@ const ReportPage = () => {
 
         if (currentSessionId) {
           setSessionId(currentSessionId);
-          const response = await getSessionGraph(currentSessionId);
+          const response = await getSessionGraph(currentSessionId, language);
           if (response.isSuccess) {
             setGraphData(response.result);
           }
@@ -83,6 +105,7 @@ const ReportPage = () => {
     };
 
     fetchGraphData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
@@ -107,26 +130,28 @@ const ReportPage = () => {
                   className="px-3 py-1 rounded-md text-white text-xs font-medium"
                   style={{ background: 'linear-gradient(90deg, #E822E5 0%, #7C3BEC 100%)' }}
                 >
-                  분석완료
+                  {language === 'ko' ? '분석완료' : 'Complete'}
                 </div>
                 <span className="text-white/40 text-xs">
-                  세션 ID : {graphData?.sessionId || sessionId || "session ID - 12255ed7"}
+                  {language === 'ko' ? '세션 ID' : 'Session ID'} : {graphData?.sessionId || sessionId || "session ID - 12255ed7"}
                 </span>
               </div>
-              <h1 className="text-3xl font-bold text-white">AI 협업 패턴 분석 리포트</h1>
+              <h1 className="text-3xl font-bold text-white">
+                {language === 'ko' ? 'AI 협업 패턴 분석 리포트' : 'AI Collaboration Pattern Analysis Report'}
+              </h1>
             </div>
 
             <div className="flex gap-6 text-right">
               <div>
-                <div className="text-white/60 text-xs">분석 소요 시간</div>
+                <div className="text-white/60 text-xs">{language === 'ko' ? '분석 소요 시간' : 'Analysis Time'}</div>
                 <div className="text-white text-lg font-medium">
-                  {graphData?.graphExecution.executionTime.toFixed(1) || "0.1"} 초
+                  {graphData?.graphExecution.executionTime.toFixed(1) || "0.1"} {language === 'ko' ? '초' : 'sec'}
                 </div>
               </div>
               <div>
-                <div className="text-[#BA80FF] text-xs">수행 유닛</div>
+                <div className="text-[#BA80FF] text-xs">{language === 'ko' ? '수행 유닛' : 'Units'}</div>
                 <div className="text-[#BA80FF] text-lg font-medium">
-                  {graphData?.graphExecution.nodesExecuted.length || 6} 단계
+                  {graphData?.graphExecution.nodesExecuted.length || 6} {language === 'ko' ? '단계' : 'steps'}
                 </div>
               </div>
             </div>
@@ -141,22 +166,22 @@ const ReportPage = () => {
               }}
             >
               <div className="flex justify-between items-center mb-2">
-                <span className="text-white/70 text-sm">프롬프트 적극성</span>
+                <span className="text-white/70 text-sm">{language === 'ko' ? '프롬프트 적극성' : 'Prompt Activeness'}</span>
                 <span
                   className="text-xs px-2 py-0.5 rounded"
                   style={getLevelTagStyle(graphData?.patterns.prompt.level || "low")}
                 >
-                  {levelNameMap[graphData?.patterns.prompt.level || "low"] || "낮음"}
+                  {levelNameMap[graphData?.patterns.prompt.level || "low"] || (language === 'ko' ? "낮음" : "Low")}
                 </span>
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-white text-4xl font-light">
                   {Math.round((graphData?.patterns.prompt.score || 0.2) * 100)}
                 </span>
-                <span className="text-white/40 text-lg">점</span>
+                <span className="text-white/40 text-lg">{language === 'ko' ? '점' : 'pts'}</span>
               </div>
               <span className="text-white/70 text-sm">
-                {graphData?.patterns.prompt.description || "선택적 AI 활용"}
+                {graphData?.patterns.prompt.description || (language === 'ko' ? "선택적 AI 활용" : "Selective AI Usage")}
               </span>
             </div>
 
@@ -168,22 +193,22 @@ const ReportPage = () => {
               }}
             >
               <div className="flex justify-between items-center mb-2">
-                <span className="text-white/70 text-sm">상호작용 간격</span>
+                <span className="text-white/70 text-sm">{language === 'ko' ? '상호작용 간격' : 'Interaction Interval'}</span>
                 <span
                   className="text-xs px-2 py-0.5 rounded"
                   style={getLevelTagStyle(graphData?.patterns.interval.level || "medium")}
                 >
-                  {levelNameMap[graphData?.patterns.interval.level || "medium"] || "보통"}
+                  {levelNameMap[graphData?.patterns.interval.level || "medium"] || (language === 'ko' ? "보통" : "Medium")}
                 </span>
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-white text-4xl font-light">
                   {Math.round((graphData?.patterns.interval.score || 0.5) * 100)}
                 </span>
-                <span className="text-white/40 text-lg">점</span>
+                <span className="text-white/40 text-lg">{language === 'ko' ? '점' : 'pts'}</span>
               </div>
               <span className="text-white/70 text-sm">
-                {graphData?.patterns.interval.description || "적당한 사고 시간"}
+                {graphData?.patterns.interval.description || (language === 'ko' ? "적당한 사고 시간" : "Adequate thinking time")}
               </span>
             </div>
 
@@ -195,22 +220,22 @@ const ReportPage = () => {
               }}
             >
               <div className="flex justify-between items-center mb-2">
-                <span className="text-white/70 text-sm">결과 정교화</span>
+                <span className="text-white/70 text-sm">{language === 'ko' ? '결과 정교화' : 'Result Refinement'}</span>
                 <span
                   className="text-xs px-2 py-0.5 rounded"
                   style={getLevelTagStyle(graphData?.patterns.refinement.level || "low")}
                 >
-                  {levelNameMap[graphData?.patterns.refinement.level || "low"] || "낮음"}
+                  {levelNameMap[graphData?.patterns.refinement.level || "low"] || (language === 'ko' ? "낮음" : "Low")}
                 </span>
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-white text-4xl font-light">
                   {Math.round((graphData?.patterns.refinement.score || 0.3) * 100)}
                 </span>
-                <span className="text-white/40 text-lg">점</span>
+                <span className="text-white/40 text-lg">{language === 'ko' ? '점' : 'pts'}</span>
               </div>
               <span className="text-white/70 text-sm">
-                {graphData?.patterns.refinement.description || "적당한 수정 과정"}
+                {graphData?.patterns.refinement.description || (language === 'ko' ? "적당한 수정 과정" : "Adequate refinement")}
               </span>
             </div>
           </div>
@@ -238,12 +263,12 @@ const ReportPage = () => {
                     <path d="M12 2L14 8H20L15 12L17 18L12 14L7 18L9 12L4 8H10L12 2Z" stroke="#BA80FF" strokeWidth="1.5" fill="none" />
                   </svg>
                 </div>
-                <h2 className="text-white text-xl font-semibold">선택적 AI 활용</h2>
+                <h2 className="text-white text-xl font-semibold">{language === 'ko' ? '선택적 AI 활용' : 'Selective AI Usage'}</h2>
               </div>
 
               <div className="flex gap-8">
                 <div className="flex-1">
-                  <h3 className="text-white/60 text-sm mb-4">LLM 상세 분석</h3>
+                  <h3 className="text-white/60 text-sm mb-4">{language === 'ko' ? 'LLM 상세 분석' : 'LLM Detailed Analysis'}</h3>
                   <div className="space-y-3">
                     {(graphData?.llmInsights || [
                       "균형 잡힌 AI 협업 패턴을 보이고 있습니다.",
@@ -259,7 +284,7 @@ const ReportPage = () => {
                 </div>
 
                 <div className="flex-1">
-                  <h3 className="text-white/60 text-sm mb-4">핵심 행동 패턴</h3>
+                  <h3 className="text-white/60 text-sm mb-4">{language === 'ko' ? '핵심 행동 패턴' : 'Core Behavior Patterns'}</h3>
                   <div className="space-y-3">
                     {(graphData?.patternInsights || [
                       "균형 잡힌 AI 협업 패턴을 보이고 있습니다.",
@@ -285,7 +310,7 @@ const ReportPage = () => {
                 border: '1px solid rgba(186,128,255,0.4)',
               }}
             >
-              <h2 className="text-white text-xl font-semibold mb-6">그래프 실행 트레이스 (Execution Flow)</h2>
+              <h2 className="text-white text-xl font-semibold mb-6">{language === 'ko' ? '그래프 실행 트레이스 (Execution Flow)' : 'Graph Execution Trace (Execution Flow)'}</h2>
 
               <div className="flex items-center mb-3 w-[85%]">
                 {executionRow1.map((node, index) => (
@@ -320,47 +345,47 @@ const ReportPage = () => {
               className="rounded-2xl p-6 mb-6"
               style={{ background: 'rgba(45,40,50,0.9)' }}
             >
-              <h2 className="text-white text-xl font-semibold mb-4">수집 지표 데이터</h2>
+              <h2 className="text-white text-xl font-semibold mb-4">{language === 'ko' ? '수집 지표 데이터' : 'Collected Metrics Data'}</h2>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between px-5 py-4 rounded-xl" style={{ background: 'rgba(50,45,55,0.8)' }}>
                   <div className="flex items-center gap-3">
                     <span className="text-white">✦</span>
-                    <span className="text-white/80">총 프롬프트 수</span>
+                    <span className="text-white/80">{language === 'ko' ? '총 프롬프트 수' : 'Total Prompts'}</span>
                   </div>
-                  <span className="text-white">{graphData?.metrics.totalPrompts || 0}회</span>
+                  <span className="text-white">{graphData?.metrics.totalPrompts || 0}{language === 'ko' ? '회' : ''}</span>
                 </div>
 
                 <div className="flex items-center justify-between px-5 py-4 rounded-xl" style={{ background: 'rgba(50,45,55,0.8)' }}>
                   <div className="flex items-center gap-3">
                     <span className="text-white">⏱</span>
-                    <span className="text-white/80">평균 시간 간격</span>
+                    <span className="text-white/80">{language === 'ko' ? '평균 시간 간격' : 'Avg. Time Interval'}</span>
                   </div>
-                  <span className="text-white">{graphData?.metrics.avgInterval?.toFixed(1) || 0}초</span>
+                  <span className="text-white">{graphData?.metrics.avgInterval?.toFixed(1) || 0}{language === 'ko' ? '초' : 's'}</span>
                 </div>
 
                 <div className="flex items-center justify-between px-5 py-4 rounded-xl" style={{ background: 'rgba(50,45,55,0.8)' }}>
                   <div className="flex items-center gap-3">
                     <span className="text-white">✎</span>
-                    <span className="text-white/80">수정 루프 횟수</span>
+                    <span className="text-white/80">{language === 'ko' ? '수정 루프 횟수' : 'Refinement Loops'}</span>
                   </div>
-                  <span className="text-white">{graphData?.metrics.refinementLoops || 0}회</span>
+                  <span className="text-white">{graphData?.metrics.refinementLoops || 0}{language === 'ko' ? '회' : ''}</span>
                 </div>
 
                 <div className="flex items-center justify-between px-5 py-4 rounded-xl" style={{ background: 'rgba(50,45,55,0.8)' }}>
                   <div className="flex items-center gap-3">
                     <span className="text-white">★</span>
-                    <span className="text-white/80">총 이벤트 발생</span>
+                    <span className="text-white/80">{language === 'ko' ? '총 이벤트 발생' : 'Total Events'}</span>
                   </div>
-                  <span className="text-white">{graphData?.metrics.eventCount || 0}회</span>
+                  <span className="text-white">{graphData?.metrics.eventCount || 0}{language === 'ko' ? '회' : ''}</span>
                 </div>
 
                 <div className="flex items-center justify-between px-5 py-4 rounded-xl" style={{ background: 'rgba(50,45,55,0.8)' }}>
                   <div className="flex items-center gap-3">
                     <span className="text-white">✓</span>
-                    <span className="text-white/80">의사결정 분기점</span>
+                    <span className="text-white/80">{language === 'ko' ? '의사결정 분기점' : 'Decision Boundaries'}</span>
                   </div>
-                  <span className="text-white">{graphData?.metrics.decisionBoundaries || 0}회</span>
+                  <span className="text-white">{graphData?.metrics.decisionBoundaries || 0}{language === 'ko' ? '회' : ''}</span>
                 </div>
               </div>
             </div>
@@ -372,13 +397,13 @@ const ReportPage = () => {
                 border: '1px solid rgba(186,128,255,0.3)',
               }}
             >
-              <h2 className="text-white text-xl font-semibold mb-6">이벤트 유형별 분포</h2>
+              <h2 className="text-white text-xl font-semibold mb-6">{language === 'ko' ? '이벤트 유형별 분포' : 'Event Type Distribution'}</h2>
 
               {Object.keys(eventDistribution).length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <span className="text-white/30 text-4xl mb-3">📊</span>
-                  <p className="text-white/50 text-sm">아직 수집된 이벤트 데이터가 없습니다.</p>
-                  <p className="text-white/30 text-xs mt-1">AI 사이트에서 활동 후 다시 확인해주세요.</p>
+                  <p className="text-white/50 text-sm">{language === 'ko' ? '아직 수집된 이벤트 데이터가 없습니다.' : 'No event data collected yet.'}</p>
+                  <p className="text-white/30 text-xs mt-1">{language === 'ko' ? 'AI 사이트에서 활동 후 다시 확인해주세요.' : 'Please check again after working on AI sites.'}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -386,7 +411,7 @@ const ReportPage = () => {
                     <div key={eventType}>
                       <div className="flex justify-between mb-2">
                         <span className="text-white/70 text-sm">{eventType.replace(/_/g, ' ')}</span>
-                        <span className="text-white text-sm">{count}건</span>
+                        <span className="text-white text-sm">{count}{language === 'ko' ? '건' : ''}</span>
                       </div>
                       <div className="h-[7px] rounded-full overflow-hidden" style={{ background: 'transparent' }}>
                         <div
@@ -408,7 +433,7 @@ const ReportPage = () => {
                 onClick={() => navigate('/dashboard')}
                 className="w-full px-8 py-3 rounded-2xl border border-white/30 text-white hover:bg-white/10 transition-colors cursor-pointer bg-gradient-to-r from-[#FF7DFD] to-[#A36EFF] font-medium text-lg"
               >
-                스타일 결과로 돌아가기
+                {language === 'ko' ? '스타일 결과로 돌아가기' : 'Back to Style Results'}
               </button>
             </div>
           </div>

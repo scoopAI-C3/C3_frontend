@@ -5,6 +5,7 @@ import DataStatusSection from "./DataStatusSection";
 import StrengthWeaknessSection from "./StrengthWeaknessSection";
 import TimelineSection from "./TimelineSection";
 import type { SessionResultData } from "../../types/session";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface SessionResultDisplayProps {
   data: SessionResultData;
@@ -14,11 +15,12 @@ interface SessionResultDisplayProps {
 
 const SessionResultDisplay = ({ data, isFromSurvey = false }: SessionResultDisplayProps) => {
   const navigate = useNavigate();
+  const { language } = useLanguage();
 
   const handleShare = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url);
-    alert('링크가 클립보드에 복사되었습니다!');
+    alert(language === 'ko' ? '링크가 클립보드에 복사되었습니다!' : 'Link copied to clipboard!');
   };
 
   return (
@@ -73,7 +75,7 @@ const SessionResultDisplay = ({ data, isFromSurvey = false }: SessionResultDispl
                 onClick={() => navigate('/landing')}
                 className="w-80 h-28 bg-white/30 rounded-3xl text-xl font-semibold leading-10 cursor-pointer hover:bg-white/40 transition-colors text-white"
               >
-                홈으로 돌아가기
+                {language === 'ko' ? '홈으로 돌아가기' : 'Back to Home'}
               </button>
             </div>
           </section>
