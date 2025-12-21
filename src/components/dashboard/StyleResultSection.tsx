@@ -4,6 +4,7 @@ import bgImage from "../../assets/bg.svg";
 import TextLogo from "../../assets/TextLogo.png";
 import type { PrimaryStyle, StyleDetail } from "../../types/session";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface StyleResultSectionProps {
   primaryStyle: PrimaryStyle;
@@ -12,6 +13,7 @@ interface StyleResultSectionProps {
 
 const StyleResultSection = ({ primaryStyle, styleDetail }: StyleResultSectionProps) => {
   const navigate = useNavigate();
+  const { language } = useLanguage();
   return (
     <section
       className="flex flex-col items-center w-screen min-h-screen bg-cover bg-center bg-no-repeat py-20"
@@ -26,11 +28,23 @@ const StyleResultSection = ({ primaryStyle, styleDetail }: StyleResultSectionPro
         </ScrollReveal>
         <ScrollReveal animation="fadeUp" delay={200}>
           <h1 className="text-left text-4xl font-bold mt-12 mb-6">
-            당신의{" "}
-            <span className="bg-clip-text text-transparent bg-[linear-gradient(90deg,#FF7DFD_81%,#A36EFF_100%)]">
-              AI 협업
-            </span>{" "}
-            스타일은?
+            {language === 'ko' ? (
+              <>
+                당신의{" "}
+                <span className="bg-clip-text text-transparent bg-[linear-gradient(90deg,#FF7DFD_81%,#A36EFF_100%)]">
+                  AI 협업
+                </span>{" "}
+                스타일은?
+              </>
+            ) : (
+              <>
+                What is your{" "}
+                <span className="bg-clip-text text-transparent bg-[linear-gradient(90deg,#FF7DFD_81%,#A36EFF_100%)]">
+                  AI Collaboration
+                </span>{" "}
+                Style?
+              </>
+            )}
           </h1>
           <p className="text-left text-white/70 font-normal text-lg">
             "{styleDetail.todayMessage}"

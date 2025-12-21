@@ -6,6 +6,7 @@ import { analyzeSession } from "../apis/session";
 import { useNavigate } from "react-router-dom";
 import LanguageToggle from "../components/LanguageToggle";
 import { useLanguage } from "../contexts/LanguageContext";
+import InstallModal from "../components/InstallModal";
 
 const AI_SITES = [
   { name: "ChatGPT", url: "https://chat.openai.com", color: "#10A37F" },
@@ -72,7 +73,7 @@ const LandingPage = () => {
           <div className="relative">
             <button
               onClick={() => setShowGuide(!showGuide)}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all text-sm font-bold"
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all text-sm font-bold cursor-pointer"
             >
               ?
             </button>
@@ -86,19 +87,32 @@ const LandingPage = () => {
                 <ol className="text-white/60 text-sm mb-4 leading-relaxed space-y-2">
                   <li className="flex gap-2">
                     <span className="text-[#A855F7] font-bold">1.</span>
-                    <span>{language === 'ko' ? 'Chrome에서 ' : 'Go to '}<code className="bg-white/10 px-1 rounded text-xs">chrome://extensions</code>{language === 'ko' ? ' 접속' : ' in Chrome'}</span>
+                    <span>
+                      <a
+                        href={GITHUB_RELEASE_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#A855F7] hover:underline"
+                      >
+                        {language === 'ko' ? 'GitHub에서 확장 프로그램 다운로드' : 'Download extension from GitHub'}
+                      </a>
+                    </span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-[#A855F7] font-bold">2.</span>
-                    <span>{language === 'ko' ? '우측 상단 "개발자 모드" 활성화' : 'Enable "Developer mode" at top right'}</span>
+                    <span>{language === 'ko' ? 'Chrome에서 ' : 'Go to '}<code className="bg-white/10 px-1 rounded text-xs">chrome://extensions</code>{language === 'ko' ? ' 접속' : ' in Chrome'}</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-[#A855F7] font-bold">3.</span>
-                    <span>{language === 'ko' ? '"압축해제된 확장 프로그램을 로드합니다" 클릭' : 'Click "Load unpacked"'}</span>
+                    <span>{language === 'ko' ? '우측 상단 "개발자 모드" 활성화' : 'Enable "Developer mode" at top right'}</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-[#A855F7] font-bold">4.</span>
-                    <span>{language === 'ko' ? '빌드된 ' : 'Select the built '}<code className="bg-white/10 px-1 rounded text-xs">dist</code>{language === 'ko' ? ' 폴더 선택' : ' folder'}</span>
+                    <span>{language === 'ko' ? '"압축해제된 확장 프로그램을 로드합니다" 클릭' : 'Click "Load unpacked"'}</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-[#A855F7] font-bold">5.</span>
+                    <span>{language === 'ko' ? '다운로드한 폴더 안의 ' : 'Select the '}<code className="bg-white/10 px-1 rounded text-xs">dist</code>{language === 'ko' ? ' 폴더 선택' : ' folder inside downloaded folder'}</span>
                   </li>
                 </ol>
 
@@ -170,127 +184,7 @@ const LandingPage = () => {
         </div>
       </main>
 
-      {/* 확장 프로그램 설치 안내 모달 */}
-      {showInstallModal && (
-        <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
-          onClick={() => setShowInstallModal(false)}
-        >
-          <div
-            className="bg-[#2D2B33] rounded-3xl p-8 max-w-lg w-full mx-4 border border-white/10 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* 헤더 */}
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-white text-2xl font-bold">
-                {language === 'ko' ? '확장 프로그램 설치 필요' : 'Extension Installation Required'}
-              </h2>
-              <button
-                onClick={() => setShowInstallModal(false)}
-                className="text-white/50 hover:text-white text-2xl leading-none"
-              >
-                &times;
-              </button>
-            </div>
-
-            {/* 설명 */}
-            <p className="text-white/70 mb-6">
-              {language === 'ko'
-                ? 'AI 협업 분석을 시작하려면 HANDOFF 확장 프로그램이 필요합니다. 아래 단계를 따라 설치해주세요.'
-                : 'To start AI collaboration analysis, you need the HANDOFF extension. Please follow the steps below to install.'}
-            </p>
-
-            {/* Step 1: 설치 방법 */}
-            <div className="bg-white/5 rounded-xl p-4 mb-4">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="w-7 h-7 rounded-full bg-gradient-to-r from-fuchsia-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold">1</span>
-                <span className="text-white font-semibold">
-                  {language === 'ko' ? 'Chrome에 설치' : 'Install on Chrome'}
-                </span>
-              </div>
-              <ul className="text-white/60 text-sm space-y-2 ml-10">
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] mt-1.5 shrink-0" />
-                  <a
-                    href={GITHUB_RELEASE_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#A855F7] hover:underline inline-flex items-center gap-1"
-                  >
-                    {language === 'ko' ? 'GitHub에서 확장 프로그램 다운로드' : 'Download extension from GitHub'}
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] mt-1.5 shrink-0" />
-                  <span>
-                    {language === 'ko' ? '주소창에 ' : 'Type '}
-                    <code className="bg-white/10 px-2 py-0.5 rounded text-xs text-white/80">chrome://extensions</code>
-                    {language === 'ko' ? ' 입력' : ' in address bar'}
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] mt-1.5 shrink-0" />
-                  <span>
-                    {language === 'ko'
-                      ? <>우측 상단 <span className="text-[#A855F7]">"개발자 모드"</span> 활성화</>
-                      : <>Enable <span className="text-[#A855F7]">"Developer mode"</span> at top right</>}
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] mt-1.5 shrink-0" />
-                  <span>
-                    {language === 'ko'
-                      ? <><span className="text-[#A855F7]">"압축해제된 확장 프로그램을 로드합니다"</span> 클릭</>
-                      : <>Click <span className="text-[#A855F7]">"Load unpacked"</span></>}
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] mt-1.5 shrink-0" />
-                  <span>{language === 'ko' ? '다운로드한 폴더 선택' : 'Select downloaded folder'}</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Step 2: AI 사이트 이동 */}
-            <div className="bg-white/5 rounded-xl p-4 mb-6">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="w-7 h-7 rounded-full bg-gradient-to-r from-fuchsia-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold">2</span>
-                <span className="text-white font-semibold">
-                  {language === 'ko' ? 'AI 사이트에서 작업 시작' : 'Start working on AI sites'}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 ml-10">
-                {AI_SITES.map((site) => (
-                  <a
-                    key={site.name}
-                    href={site.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                  >
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: site.color }}
-                    />
-                    <span className="text-white/80 text-sm">{site.name}</span>
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            {/* 닫기 버튼 */}
-            <button
-              onClick={() => setShowInstallModal(false)}
-              className="w-full py-3 rounded-xl border border-white/20 text-white/70 hover:bg-white/5 transition-colors"
-            >
-              {language === 'ko' ? '닫기' : 'Close'}
-            </button>
-          </div>
-        </div>
-      )}
+      <InstallModal isOpen={showInstallModal} onClose={() => setShowInstallModal(false)} />
     </div>
   );
 };

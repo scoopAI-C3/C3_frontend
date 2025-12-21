@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import ScrollReveal from "../ScrollReveal";
 import type { DailyTimeline, TimelineEvent } from "../../types/session";
 import { createShareLink } from "../../apis/share";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface TimelineSectionProps {
   sessionId: string;
@@ -158,6 +159,7 @@ const BAR_BG_COLOR = "#211F26";
 
 const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage }: TimelineSectionProps) => {
   const navigate = useNavigate();
+  const { language } = useLanguage();
   const [isSharing, setIsSharing] = useState(false);
 
   const toolEntries = Object.entries(aiToolUsage);
@@ -293,7 +295,7 @@ const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage
               }}
               className="w-80 h-28 bg-white/30 rounded-3xl text-xl font-semibold leading-10 cursor-pointer hover:bg-white/40 transition-colors text-white"
             >
-              분석 리포트 보기
+              {language === 'ko' ? '분석 리포트 보기' : 'View Analysis Report'}
             </button>
           </div>
         </ScrollReveal>
