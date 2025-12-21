@@ -144,6 +144,7 @@ export interface SessionObserveRequest {
 
 export interface SessionAnalyzeRequest {
   sessionId: string
+  language?: string
 }
 
 // Survey Result (설문 결과 API 응답)

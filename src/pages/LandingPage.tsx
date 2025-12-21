@@ -48,7 +48,7 @@ const LandingPage = () => {
         sessionId?: string;
       };
       if (data.sessionId) {
-        await analyzeSession({ sessionId: data.sessionId });
+        await analyzeSession({ sessionId: data.sessionId, language });
         navigate("/dashboard");
       } else {
         // sessionId가 없으면 AI 사이트로 이동 안내
