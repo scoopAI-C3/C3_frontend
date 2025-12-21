@@ -101,8 +101,7 @@ const DataStatusSection = ({ dataSummary }: DataStatusSectionProps) => {
               <img src={Rectangle} alt="Background" className="absolute inset-0 w-full h-full object-fill" />
               <div className={textContainerClass}>
                 <img className="w-16 h-16 mb-2" src={DecisionEvent} alt="Decision Event" />
-                <p className={titleClass}>Decision Event</p>
-                <p className="text-white leading-3 font-bold">발생빈도</p>
+                <p className={titleClass}>발생 빈도</p>
                 <p className={valueClass}>{translateDecisionEventFrequency(dataSummary.decisionEventFrequency)}</p>
               </div>
             </div>
