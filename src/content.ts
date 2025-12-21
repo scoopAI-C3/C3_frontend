@@ -85,9 +85,9 @@ const SELECTORS: Record<PlatformType, {
     streamingIndicator: '[data-is-streaming="true"]'
   },
   'gemini.google.com': {
-    userMessage: 'user-query, .user-query-text, [data-message-author-role="user"]',
-    assistantMessage: 'model-response, .model-response-text, [data-message-author-role="model"]',
-    streamingIndicator: '.bard-avatar.thinking, [aria-busy="true"], .markdown .pending, .markdown .animating'
+    userMessage: '[data-turn-role="user"], .user-query, user-query, [class*="query-content"], [class*="user-message"], [class*="human-turn"], message-content[data-message-author-role="user"]',
+    assistantMessage: '[data-turn-role="model"], .model-response, model-response, [class*="response-content"], [class*="model-message"], [class*="assistant-turn"], message-content[data-message-author-role="model"]',
+    streamingIndicator: '[data-loading="true"], .loading-indicator, .thinking-indicator, [aria-busy="true"], .streaming, [class*="loading"], [class*="thinking"], .response-streaming, loading-indicator'
   },
   'copilot.microsoft.com': {
     userMessage: '[data-content="user-message"], .user-message, [class*="UserMessage"], cib-message-group[source="user"]',
@@ -121,10 +121,28 @@ function triggerUserMessage() {
 function setupMessageDetection() {
   if (!selectors) return
 
+  const debugUserSelectors = () => {
+    const selectorList = selectors.userMessage.split(', ')
+    selectorList.forEach(sel => {
+      try {
+        const matches = document.querySelectorAll(sel)
+        if (matches.length > 0) {
+          console.log(`[HANDOFF] User selector matched: "${sel}" (${matches.length} elements)`)
+        }
+      } catch {
+        // invalid selector
+      }
+    })
+  }
+  debugUserSelectors()
+
   let lastUserMessageCount = document.querySelectorAll(selectors.userMessage).length
+  console.log(`[HANDOFF] Initial user message count: ${lastUserMessageCount}`)
+
   const userMessageObserver = new MutationObserver(() => {
     const currentCount = document.querySelectorAll(selectors.userMessage).length
     if (currentCount > lastUserMessageCount) {
+      console.log(`[HANDOFF] User message count changed: ${lastUserMessageCount} -> ${currentCount}`)
       triggerUserMessage()
       lastUserMessageCount = currentCount
     }
@@ -139,15 +157,40 @@ function setupMessageDetection() {
       const active = document.activeElement
       if (active?.tagName === 'TEXTAREA' ||
           (active as HTMLElement)?.getAttribute?.('contenteditable') === 'true' ||
-          active?.closest('[contenteditable="true"]')) {
+          active?.closest('[contenteditable="true"]') ||
+          active?.closest('rich-textarea') || // Gemini uses rich-textarea
+          active?.closest('[role="textbox"]')) {
+        console.log('[HANDOFF] Enter key detected in input area')
         setTimeout(() => {
           const newCount = document.querySelectorAll(selectors.userMessage).length
           if (newCount > lastUserMessageCount) {
             triggerUserMessage()
             lastUserMessageCount = newCount
+          } else {
+            if (platform === 'gemini.google.com') {
+              console.log('[HANDOFF] Gemini: Enter detected, treating as message submit')
+              triggerUserMessage()
+            }
           }
-        }, 500)
+        }, 1000)
       }
+    }
+  })
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement
+    if (target.closest('button[aria-label*="Send"], button[aria-label*="submit"], button[data-testid*="send"], [class*="send-button"], [class*="submit"]')) {
+      console.log('[HANDOFF] Send button clicked')
+      setTimeout(() => {
+        const newCount = document.querySelectorAll(selectors.userMessage).length
+        if (newCount > lastUserMessageCount) {
+          triggerUserMessage()
+          lastUserMessageCount = newCount
+        } else if (platform === 'gemini.google.com') {
+          console.log('[HANDOFF] Gemini: Send button clicked, treating as message submit')
+          triggerUserMessage()
+        }
+      }, 1000)
     }
   })
 }
