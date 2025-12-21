@@ -1,3 +1,5 @@
+import { useLanguage } from "../contexts/LanguageContext";
+
 const AI_SITES = [
   { name: "ChatGPT", url: "https://chat.openai.com", color: "#10A37F" },
   { name: "Claude", url: "https://claude.ai", color: "#D97706" },
@@ -13,6 +15,8 @@ interface InstallModalProps {
 }
 
 const InstallModal = ({ isOpen, onClose }: InstallModalProps) => {
+  const { language } = useLanguage();
+
   if (!isOpen) return null;
 
   return (
@@ -25,7 +29,9 @@ const InstallModal = ({ isOpen, onClose }: InstallModalProps) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-white text-2xl font-bold">확장 프로그램 설치 필요</h2>
+          <h2 className="text-white text-2xl font-bold">
+            {language === 'ko' ? '확장 프로그램 설치 필요' : 'Extension Installation Required'}
+          </h2>
           <button
             onClick={onClose}
             className="text-white/50 hover:text-white text-2xl leading-none"
@@ -35,14 +41,15 @@ const InstallModal = ({ isOpen, onClose }: InstallModalProps) => {
         </div>
 
         <p className="text-white/70 mb-6">
-          AI 협업 분석을 시작하려면 HANDOFF 확장 프로그램이 필요합니다.
-          아래 단계를 따라 설치해주세요.
+          {language === 'ko'
+            ? 'AI 협업 분석을 시작하려면 HANDOFF 확장 프로그램이 필요합니다. 아래 단계를 따라 설치해주세요.'
+            : 'To start AI collaboration analysis, you need the HANDOFF extension. Please follow the steps below to install.'}
         </p>
 
         <div className="bg-white/5 rounded-xl p-4 mb-4">
           <div className="flex items-center gap-3 mb-3">
             <span className="w-7 h-7 rounded-full bg-gradient-to-r from-fuchsia-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold">1</span>
-            <span className="text-white font-semibold">Chrome에 설치</span>
+            <span className="text-white font-semibold">{language === 'ko' ? 'Chrome에 설치' : 'Install on Chrome'}</span>
           </div>
           <ul className="text-white/60 text-sm space-y-2 ml-10">
             <li className="flex items-start gap-2">
@@ -53,7 +60,7 @@ const InstallModal = ({ isOpen, onClose }: InstallModalProps) => {
                 rel="noopener noreferrer"
                 className="text-[#A855F7] hover:underline inline-flex items-center gap-1"
               >
-                GitHub에서 확장 프로그램 다운로드
+                {language === 'ko' ? 'GitHub에서 확장 프로그램 다운로드' : 'Download extension from GitHub'}
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
@@ -61,19 +68,19 @@ const InstallModal = ({ isOpen, onClose }: InstallModalProps) => {
             </li>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] mt-1.5 shrink-0" />
-              <span>주소창에 <code className="bg-white/10 px-2 py-0.5 rounded text-xs text-white/80">chrome://extensions</code> 입력</span>
+              <span>{language === 'ko' ? '주소창에' : 'Enter'} <code className="bg-white/10 px-2 py-0.5 rounded text-xs text-white/80">chrome://extensions</code> {language === 'ko' ? '입력' : 'in the address bar'}</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] mt-1.5 shrink-0" />
-              <span>우측 상단 <span className="text-[#A855F7]">"개발자 모드"</span> 활성화</span>
+              <span>{language === 'ko' ? '우측 상단' : 'Enable'} <span className="text-[#A855F7]">{language === 'ko' ? '"개발자 모드"' : '"Developer mode"'}</span> {language === 'ko' ? '활성화' : 'at the top right'}</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] mt-1.5 shrink-0" />
-              <span><span className="text-[#A855F7]">"압축해제된 확장 프로그램을 로드합니다"</span> 클릭</span>
+              <span>{language === 'ko' ? '' : 'Click '}<span className="text-[#A855F7]">{language === 'ko' ? '"압축해제된 확장 프로그램을 로드합니다"' : '"Load unpacked"'}</span>{language === 'ko' ? ' 클릭' : ''}</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] mt-1.5 shrink-0" />
-              <span>다운로드한 폴더 선택</span>
+              <span>{language === 'ko' ? '다운로드한 폴더 선택' : 'Select the downloaded folder'}</span>
             </li>
           </ul>
         </div>
@@ -81,7 +88,7 @@ const InstallModal = ({ isOpen, onClose }: InstallModalProps) => {
         <div className="bg-white/5 rounded-xl p-4 mb-6">
           <div className="flex items-center gap-3 mb-3">
             <span className="w-7 h-7 rounded-full bg-gradient-to-r from-fuchsia-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold">2</span>
-            <span className="text-white font-semibold">AI 사이트에서 작업 시작</span>
+            <span className="text-white font-semibold">{language === 'ko' ? 'AI 사이트에서 작업 시작' : 'Start working on AI sites'}</span>
           </div>
           <div className="grid grid-cols-2 gap-2 ml-10">
             {AI_SITES.map((site) => (
