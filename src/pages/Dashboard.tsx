@@ -3,8 +3,10 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import SessionResultDisplay from "../components/dashboard/SessionResultDisplay";
 import { getSessionResult } from "../apis/session";
 import type { SessionResultData, SurveyResultData } from "../types/session";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const Dashboard = () => {
+  const { language } = useLanguage();
   const [sessionResult, setSessionResult] = useState<SessionResultData | null>(null);
   const [surveyResult, setSurveyResult] = useState<SurveyResultData | null>(null);
   const [isFromSurvey, setIsFromSurvey] = useState(false);
@@ -31,7 +33,7 @@ const Dashboard = () => {
         // 먼저 localStorage에서 sharedSessionId 확인 (공유 페이지에서 온 경우)
         const sharedSessionId = localStorage.getItem("sharedSessionId");
         if (sharedSessionId) {
-          const response = await getSessionResult(sharedSessionId);
+          const response = await getSessionResult(sharedSessionId, language);
           if (response.isSuccess) {
             setSessionResult(response.result);
           }
@@ -50,7 +52,7 @@ const Dashboard = () => {
           "sessionId",
         ])) as { sessionId?: string };
         if (data.sessionId) {
-          const response = await getSessionResult(data.sessionId);
+          const response = await getSessionResult(data.sessionId, language);
           if (response.isSuccess) {
             setSessionResult(response.result);
           }
@@ -63,7 +65,7 @@ const Dashboard = () => {
     };
 
     fetchResult();
-  }, []);
+  }, [language]);
 
   if (loading) {
     return <LoadingSpinner />;

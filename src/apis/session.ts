@@ -36,8 +36,9 @@ export const analyzeSession = async (request: SessionAnalyzeRequest): Promise<Ap
   return data;
 };
 
-export const getSessionResult = async (sessionId: string): Promise<ApiResponse<SessionResultData>> => {
-  const { data } = await axios.get(`${API_URL}/api/session/result/${sessionId}`);
+export const getSessionResult = async (sessionId: string, language?: string): Promise<ApiResponse<SessionResultData>> => {
+  const params = language === 'en' ? { language: 'en' } : {};
+  const { data } = await axios.get(`${API_URL}/api/session/result/${sessionId}`, { params });
   return data;
 };
 
@@ -71,12 +72,14 @@ export const getAllAICollaborationTypesDetails = async (): Promise<ApiResponse<A
   return data;
 };
 
-export const getSurveyResult = async (typeCode: string): Promise<ApiResponse<SurveyResultData>> => {
-  const { data } = await axios.get(`${API_URL}/api/ai-collaboration-types/${typeCode}/survey-result`);
+export const getSurveyResult = async (typeCode: string, language?: string): Promise<ApiResponse<SurveyResultData>> => {
+  const params = language === 'en' ? { language: 'en' } : {};
+  const { data } = await axios.get(`${API_URL}/api/ai-collaboration-types/${typeCode}/survey-result`, { params });
   return data;
 };
 
-export const getSessionGraph = async (sessionId: string): Promise<ApiResponse<SessionGraphData>> => {
-  const { data } = await axios.get(`${API_URL}/api/session/graph/${sessionId}`);
+export const getSessionGraph = async (sessionId: string, language?: string): Promise<ApiResponse<SessionGraphData>> => {
+  const params = language === 'en' ? { language: 'en' } : {};
+  const { data } = await axios.get(`${API_URL}/api/session/graph/${sessionId}`, { params });
   return data;
 };

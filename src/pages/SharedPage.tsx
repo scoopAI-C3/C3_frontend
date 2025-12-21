@@ -4,9 +4,11 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import SessionResultDisplay from "../components/dashboard/SessionResultDisplay";
 import { getSharedSessionResult } from "../apis/share";
 import type { SessionResultData } from "../types/session";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const SharedPage = () => {
   const { shareToken } = useParams<{ shareToken: string }>();
+  const { language } = useLanguage();
   const [sessionResult, setSessionResult] = useState<SessionResultData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -20,7 +22,7 @@ const SharedPage = () => {
       }
 
       try {
-        const response = await getSharedSessionResult(shareToken);
+        const response = await getSharedSessionResult(shareToken, language);
 
         if (response.isSuccess && response.result) {
           setSessionResult(response.result.result);
@@ -40,14 +42,14 @@ const SharedPage = () => {
     };
 
     fetchSharedResult();
-  }, [shareToken]);
+  }, [shareToken, language]);
 
   if (loading) return <LoadingSpinner />;
 
   if (error || !sessionResult) {
     return (
       <div className="flex w-screen h-screen items-center justify-center bg-[#211F26] text-white">
-        <p>유효하지 않거나 만료된 공유 링크입니다.</p>
+        <p>{language === 'ko' ? '유효하지 않거나 만료된 공유 링크입니다.' : 'Invalid or expired share link.'}</p>
       </div>
     );
   }

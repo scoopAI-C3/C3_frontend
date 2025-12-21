@@ -17,8 +17,9 @@ export const createShareLink = async (request: CreateShareLinkRequest): Promise<
   return data;
 };
 
-export const getSharedSessionResult = async (shareToken: string): Promise<ApiResponse<SharedSessionResult>> => {
-  const { data } = await axios.get(`${API_URL}/api/share/${shareToken}`);
+export const getSharedSessionResult = async (shareToken: string, language?: string): Promise<ApiResponse<SharedSessionResult>> => {
+  const params = language === 'en' ? { language: 'en' } : {};
+  const { data } = await axios.get(`${API_URL}/api/share/${shareToken}`, { params });
   return data;
 };
 

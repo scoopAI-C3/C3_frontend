@@ -2,32 +2,42 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TextLogo from '../assets/TextLogo.png';
 import { getSurveyResult } from '../apis/session';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface SurveyQuestion {
   id: number;
-  question: string;
+  ko: string;
+  en: string;
 }
 
-// 10개의 설문 문항
+// 10개의 설문 문항 (한국어/영어)
 const surveyQuestions: SurveyQuestion[] = [
-  { id: 1, question: "AI에게 질문하기 전에, 혼자서 어느 정도 생각을 정리하는 편이다." },
-  { id: 2, question: "결과가 필요할 때, 깊게 고민하기보다 빠르게 AI에게 물어보는 편이다." },
-  { id: 3, question: "AI가 제안한 답변을 거의 수정 없이 그대로 사용하는 경우가 많다." },
-  { id: 4, question: "AI 답변을 받은 뒤, 꼭 한 번 이상 검토하거나 수정한다." },
-  { id: 5, question: "문제가 생기면, 가장 먼저 AI를 떠올리고 사용한다." },
-  { id: 6, question: "AI는 참고용일 뿐, 최종 판단은 항상 내가 한다고 느낀다." },
-  { id: 7, question: "같은 질문을 여러 번 표현을 바꿔가며 AI에게 묻는 편이다." },
-  { id: 8, question: "AI의 답변이 마음에 들지 않으면, 다시 질문하기보다 직접 해결하려 한다." },
-  { id: 9, question: "상황에 따라, AI에게 맡길 때와 직접 할 때를 의식적으로 구분한다." },
-  { id: 10, question: "중요한 선택(방향, 결론)을 AI에게 맡긴 경험이 자주 있다." },
+  { id: 1, ko: "AI에게 질문하기 전에, 혼자서 어느 정도 생각을 정리하는 편이다.", en: "I tend to organize my thoughts before asking AI questions." },
+  { id: 2, ko: "결과가 필요할 때, 깊게 고민하기보다 빠르게 AI에게 물어보는 편이다.", en: "When I need results, I tend to ask AI quickly rather than thinking deeply." },
+  { id: 3, ko: "AI가 제안한 답변을 거의 수정 없이 그대로 사용하는 경우가 많다.", en: "I often use AI-suggested answers with little to no modification." },
+  { id: 4, ko: "AI 답변을 받은 뒤, 꼭 한 번 이상 검토하거나 수정한다.", en: "After receiving an AI response, I always review or modify it at least once." },
+  { id: 5, ko: "문제가 생기면, 가장 먼저 AI를 떠올리고 사용한다.", en: "When a problem arises, AI is the first thing I think of and use." },
+  { id: 6, ko: "AI는 참고용일 뿐, 최종 판단은 항상 내가 한다고 느낀다.", en: "I feel that AI is just for reference, and I always make the final judgment." },
+  { id: 7, ko: "같은 질문을 여러 번 표현을 바꿔가며 AI에게 묻는 편이다.", en: "I tend to ask the same question to AI multiple times with different expressions." },
+  { id: 8, ko: "AI의 답변이 마음에 들지 않으면, 다시 질문하기보다 직접 해결하려 한다.", en: "If I'm not satisfied with AI's answer, I prefer to solve it myself rather than asking again." },
+  { id: 9, ko: "상황에 따라, AI에게 맡길 때와 직접 할 때를 의식적으로 구분한다.", en: "I consciously distinguish between when to delegate to AI and when to do it myself." },
+  { id: 10, ko: "중요한 선택(방향, 결론)을 AI에게 맡긴 경험이 자주 있다.", en: "I often have experiences of entrusting important decisions to AI." },
 ];
 
-const scaleLabels = [
+const scaleLabelsKo = [
   "전혀 그렇지 않다",
   "그렇지 않다",
   "보통이다",
   "그렇다",
   "매우 그렇다",
+];
+
+const scaleLabelsEn = [
+  "Strongly Disagree",
+  "Disagree",
+  "Neutral",
+  "Agree",
+  "Strongly Agree",
 ];
 
 // Figma 디자인에 맞는 색상
@@ -134,6 +144,9 @@ const SurveyPage = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const { language } = useLanguage();
+
+  const scaleLabels = language === 'ko' ? scaleLabelsKo : scaleLabelsEn;
 
   const handleAnswer = (questionId: number, value: number) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
@@ -151,7 +164,7 @@ const SurveyPage = () => {
       setIsLoading(true);
       try {
         const typeCode = typeCodeMap[result.type];
-        const apiResponse = await getSurveyResult(typeCode);
+        const apiResponse = await getSurveyResult(typeCode, language);
 
         if (apiResponse.isSuccess) {
           // localStorage에 결과 저장
@@ -213,7 +226,7 @@ const SurveyPage = () => {
       <main className="flex flex-col items-center justify-center flex-1 w-full px-8">
         {/* Question */}
         <h1 className="text-[32px] font-bold text-white text-center mb-[75px] font-[NanumSquareRoundOTF] leading-[42px]">
-          {question.question}
+          {language === 'ko' ? question.ko : question.en}
         </h1>
 
         {/* Likert Scale */}
@@ -250,7 +263,7 @@ const SurveyPage = () => {
               onClick={handlePrev}
               className="w-[337px] h-[98px] rounded-[28px] border-2 border-white/30 text-white/70 text-[26px] font-medium font-[Inter] hover:bg-white/10 transition-colors cursor-pointer"
             >
-              이전
+              {language === 'ko' ? '이전' : 'Previous'}
             </button>
           )}
 
@@ -263,7 +276,11 @@ const SurveyPage = () => {
                 : 'bg-white/10 text-white/30 cursor-not-allowed'
             }`}
           >
-            {isLoading ? '분석 중...' : isLastQuestion ? '결과 확인' : '다음'}
+            {isLoading
+              ? (language === 'ko' ? '분석 중...' : 'Analyzing...')
+              : isLastQuestion
+                ? (language === 'ko' ? '결과 확인' : 'See Results')
+                : (language === 'ko' ? '다음' : 'Next')}
           </button>
         </div>
       </main>
