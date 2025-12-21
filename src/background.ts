@@ -17,7 +17,7 @@ let currentSessionId: string | null = null
 
 // 세션 추적 데이터
 let sessionStartTime: string | null = null
-let currentPlatform: string | null = null
+const activePlatforms: Set<string> = new Set() // 여러 플랫폼 추적
 let userMessageTimestamps: number[] = []
 let interactionTimeline: InteractionTimelineItem[] = []
 
@@ -27,7 +27,7 @@ let idleCheckTimer: ReturnType<typeof setTimeout> | null = null
 
 // observe 요청 데이터 생성
 function buildObserveRequest(endTime: number): SessionObserveRequest | null {
-  if (!currentSessionId || !sessionStartTime || !currentPlatform) {
+  if (!currentSessionId || !sessionStartTime || activePlatforms.size === 0) {
     return null
   }
 
@@ -47,10 +47,13 @@ function buildObserveRequest(endTime: number): SessionObserveRequest | null {
     return (ts - userMessageTimestamps[i - 1]) < OBSERVE_CONDITIONS.refinementIntervalSec * 1000
   })
 
+  // 사용된 모든 플랫폼을 쉼표로 연결
+  const platformsUsed = Array.from(activePlatforms).join(',')
+
   return {
     sessionId: currentSessionId,
     context: {
-      domain: currentPlatform,
+      domain: platformsUsed,
       sessionStartAt: sessionStartTime,
       sessionEndAt: new Date(endTime).toISOString()
     },
@@ -138,27 +141,34 @@ async function saveEvent(event: AgentEvent) {
   }
 
   if (event.type === 'SESSION_START') {
-    // 세션 추적 데이터 초기화
-    sessionStartTime = new Date(event.timestamp).toISOString()
-    currentPlatform = event.platform
-    userMessageTimestamps = []
-    interactionTimeline = []
-    promptsSinceLastObserve = 0
+    // 플랫폼 추가
+    activePlatforms.add(event.platform)
 
-    if (idleCheckTimer) {
-      clearTimeout(idleCheckTimer)
-      idleCheckTimer = null
-    }
+    // 세션이 없으면 새로 시작
+    if (!currentSessionId) {
+      sessionStartTime = new Date(event.timestamp).toISOString()
+      userMessageTimestamps = []
+      interactionTimeline = []
+      promptsSinceLastObserve = 0
 
-    try {
-      const response = await startSession()
-      if (response.isSuccess && response.result) {
-        currentSessionId = response.result.sessionId
-        await chrome.storage.local.set({ sessionId: currentSessionId })
-        console.log('[HANDOFF] Session started with ID:', currentSessionId)
+      if (idleCheckTimer) {
+        clearTimeout(idleCheckTimer)
+        idleCheckTimer = null
       }
-    } catch (err) {
-      console.error('[HANDOFF] Failed to start session:', err)
+
+      try {
+        const response = await startSession()
+        if (response.isSuccess && response.result) {
+          currentSessionId = response.result.sessionId
+          await chrome.storage.local.set({ sessionId: currentSessionId })
+          console.log('[HANDOFF] Session started with ID:', currentSessionId)
+        }
+      } catch (err) {
+        console.error('[HANDOFF] Failed to start session:', err)
+      }
+    } else {
+      // 기존 세션에 새 플랫폼 추가
+      console.log(`[HANDOFF] Platform ${event.platform} added to existing session ${currentSessionId}`)
     }
   }
 
@@ -167,25 +177,26 @@ async function saveEvent(event: AgentEvent) {
     await checkObserveConditions(event)
   }
 
-  // 세션 종료 시 최종 observeSession 호출 후 초기화
+  // 세션 종료 시: 해당 플랫폼만 제거, 모든 플랫폼이 종료되면 세션 종료
   if (event.type === 'SESSION_END') {
-    if (idleCheckTimer) {
-      clearTimeout(idleCheckTimer)
-      idleCheckTimer = null
-    }
+    activePlatforms.delete(event.platform)
+    console.log(`[HANDOFF] Platform ${event.platform} removed. Active platforms: ${Array.from(activePlatforms).join(', ') || 'none'}`)
 
-    if (currentSessionId && sessionStartTime) {
-      await callObserveAPI('session end')
-    }
+    // 모든 플랫폼이 종료되면 세션 종료
+    if (activePlatforms.size === 0) {
+      if (idleCheckTimer) {
+        clearTimeout(idleCheckTimer)
+        idleCheckTimer = null
+      }
 
-    // 초기화
-    currentSessionId = null
-    sessionStartTime = null
-    currentPlatform = null
-    userMessageTimestamps = []
-    interactionTimeline = []
-    promptsSinceLastObserve = 0
-    await chrome.storage.local.remove('sessionId')
+      if (currentSessionId && sessionStartTime) {
+        await callObserveAPI('all platforms closed')
+      }
+
+      // 세션은 유지하되 데이터만 정리 (sessionId는 유지)
+      // 사용자가 analyze 버튼을 누르기 전까지 sessionId 유지
+      console.log(`[HANDOFF] All platforms closed. Session ${currentSessionId} ready for analysis.`)
+    }
   }
 }
 
@@ -211,7 +222,8 @@ async function updateStatus(event: AgentEvent) {
     agentStatus: statusMap[event.type],
     decisionRisk: riskMap[event.type],
     lastActivity: event.timestamp,
-    activePlatform: event.platform
+    activePlatform: event.platform,
+    activePlatforms: Array.from(activePlatforms)
   })
 }
 
@@ -225,7 +237,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 
   if (message.type === 'GET_EVENTS') {
-    chrome.storage.local.get(['events', 'agentStatus', 'decisionRisk', 'activePlatform'])
+    chrome.storage.local.get(['events', 'agentStatus', 'decisionRisk', 'activePlatform', 'activePlatforms'])
       .then((data) => sendResponse(data))
       .catch((err) => sendResponse({ error: err.message }))
     return true
@@ -233,6 +245,24 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   if (message.type === 'CLEAR_EVENTS') {
     chrome.storage.local.set({ events: [] })
+      .then(() => sendResponse({ success: true }))
+      .catch((err) => sendResponse({ success: false, error: err.message }))
+    return true
+  }
+
+  // 세션 리셋 (분석 완료 후 새 세션 시작을 위해)
+  if (message.type === 'RESET_SESSION') {
+    currentSessionId = null
+    sessionStartTime = null
+    activePlatforms.clear()
+    userMessageTimestamps = []
+    interactionTimeline = []
+    promptsSinceLastObserve = 0
+    if (idleCheckTimer) {
+      clearTimeout(idleCheckTimer)
+      idleCheckTimer = null
+    }
+    chrome.storage.local.remove('sessionId')
       .then(() => sendResponse({ success: true }))
       .catch((err) => sendResponse({ success: false, error: err.message }))
     return true
@@ -245,7 +275,8 @@ chrome.runtime.onInstalled.addListener(() => {
     events: [],
     agentStatus: 'Inactive',
     decisionRisk: 'Low',
-    activePlatform: null
+    activePlatform: null,
+    activePlatforms: []
   })
   console.log('[HANDOFF] Extension installed')
 })

@@ -41,7 +41,42 @@ const TimelineChart = ({ events }: TimelineChartProps) => {
   const allTimes = events.map((e) => timeToMinutes(e.start));
   const minTime = Math.min(...allTimes);
   const maxTime = Math.max(...allTimes);
-  const timeRange = maxTime - minTime || 1;
+  const timeRange = maxTime - minTime;
+
+  const useEvenSpacing = timeRange < 20 || events.length > 6;
+
+  const MIN_GAP_PERCENT = 10;
+
+  const calculatePosition = (idx: number): number => {
+    if (events.length === 1) return 50;
+
+    if (useEvenSpacing) {
+      return 5 + (idx / (events.length - 1)) * 90;
+    }
+
+    const position = timeRange > 0
+      ? ((allTimes[idx] - minTime) / timeRange) * 90 + 5
+      : 50;
+
+    return position;
+  };
+
+  const adjustedPositions = events.map((_, idx) => calculatePosition(idx));
+
+  for (let i = 1; i < adjustedPositions.length; i++) {
+    const gap = adjustedPositions[i] - adjustedPositions[i - 1];
+    if (gap < MIN_GAP_PERCENT) {
+      adjustedPositions[i] = adjustedPositions[i - 1] + MIN_GAP_PERCENT;
+    }
+  }
+
+  const maxPos = Math.max(...adjustedPositions);
+  if (maxPos > 95) {
+    const scale = 90 / (maxPos - 5);
+    for (let i = 0; i < adjustedPositions.length; i++) {
+      adjustedPositions[i] = 5 + (adjustedPositions[i] - 5) * scale;
+    }
+  }
 
   return (
     <div className="relative w-full py-16 px-8">
@@ -49,7 +84,7 @@ const TimelineChart = ({ events }: TimelineChartProps) => {
 
       <div className="relative flex justify-between items-center" style={{ height: "200px" }}>
         {events.map((event, idx) => {
-          const position = ((timeToMinutes(event.start) - minTime) / timeRange) * 100;
+          const position = adjustedPositions[idx];
           const isTop = idx % 2 === 0;
           const color = TIMELINE_COLORS[idx % TIMELINE_COLORS.length];
 
