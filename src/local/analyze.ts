@@ -4,10 +4,16 @@
  * 예전 백엔드의 분석 파이프라인(spoon-service/graph/collaboration_graph.py)과 같은 규칙을 쓴다:
  *   메트릭 추출 → 패턴 분석 → 행동 점수화 → (LLM 인사이트) → 스타일 결정 → 리포트 생성
  *
- * 서버 버전과 다른 점:
+ * 해커톤 버전(서버)에서 바꾼 점:
  *  - 서버는 observe 호출마다 누적 타임라인을 다시 저장해서 프롬프트 수가 실제보다 크게 집계됐다.
  *    여기서는 실제 프롬프트 수를 그대로 쓴다.
- *  - 수정 반복 횟수는 "30초 안에 이어 보낸 프롬프트 쌍의 수"로 센다.
+ *  - "질문 간격"을 질문→질문 시간이 아니라, AI 답변이 끝난 뒤 다음 질문까지의 시간(생각 시간)으로 잰다.
+ *    예전 방식은 AI가 답을 쓰는 시간과 쉬는 시간이 섞여서 거의 모든 사람이 "간격 김"으로 나왔다.
+ *  - 10분 넘게 쉬면 대화가 끊긴 것으로 보고, 그 공백은 간격 계산에서 뺀다.
+ *  - 질문 횟수는 세션 전체 합계가 아니라 "한 번 대화를 시작했을 때 이어서 몇 번 묻는가"로 본다.
+ *    세션 길이(오래 켜 둘수록 커짐)에 결과가 좌우되지 않게 하기 위해서다.
+ *  - 스타일은 고정 가산점 대신 두 축(생각 속도, 대화 깊이)에서 각 스타일 기준점까지의 거리로 정한다.
+ *    가운데는 Balanced, 네 방향 끝은 각 스타일이 되도록 해서 특정 유형으로 쏠리지 않게 했다.
  *  - 의사결정 이벤트 수는 대시보드 타임라인에 표시되는 구간 수와 같은 값을 쓴다
  *    (서버에서는 항상 0으로 집계되던 값).
  */
@@ -39,8 +45,26 @@ import {
 } from './texts'
 import { TYPE_CONTENTS } from './typeContents'
 
-/** 30초 안에 이어 보낸 프롬프트는 "수정·재질문"으로 본다 (background.ts와 같은 기준) */
-export const REFINEMENT_INTERVAL_MS = 30_000
+/** 이보다 오래 쉬면 대화가 끊긴 것으로 본다 */
+export const IDLE_GAP_MS = 10 * 60_000
+/** 답변이 끝나고 이 시간 안에 다시 물으면 "읽자마자 고쳐 묻기(수정·재질문)"로 본다 */
+export const QUICK_FOLLOWUP_SEC = 20
+
+/** 생각 시간이 이 값이면 "빠름" 끝(1), 이 값이면 "느림" 끝(0). 그 사이는 로그 스케일 */
+const FAST_THINK_SEC = 8
+const SLOW_THINK_SEC = 90
+/** 한 대화에서 이어서 묻는 횟수가 1이면 깊이 0, 이 값 이상이면 1 */
+const DEEP_CHAIN = 6
+
+/** 두 축(speed: 생각 속도, depth: 대화 깊이) 위의 스타일 기준점 */
+const PROTOTYPES: Record<StyleName, { speed: number; depth: number }> = {
+  'AI-Driven Executor': { speed: 1, depth: 0.85 },
+  'AI-Assisted Thinker': { speed: 0, depth: 0.85 },
+  'AI Checker': { speed: 0.5, depth: 0 },
+  'Balanced Collaborator': { speed: 0.5, depth: 0.45 },
+}
+/** 기준점에서 멀어질수록 점수가 줄어드는 폭 */
+const SPREAD = 0.3
 
 export const GRAPH_NODES = [
   'extract_metrics',
@@ -65,6 +89,8 @@ export interface ObserveBatch {
 /** 언어와 무관한 분석 결과. 화면에 보여 줄 때 언어별 문구를 입힌다. */
 export interface Analysis {
   style: StyleName
+  /** 스타일을 정한 두 축 (0~1) */
+  axes?: { speed: number; depth: number }
   relativeStyles: Record<StyleName, number>
   levels: {
     prompt: Level3
@@ -98,6 +124,10 @@ function normalizeDomain(domain: string): string | null {
   return null
 }
 
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value))
+}
+
 function rateLevel(rate: number): Level3 {
   if (rate > 0.3) return 'high'
   if (rate > 0.1) return 'medium'
@@ -113,24 +143,38 @@ export function analyze(timeline: InteractionTimelineItem[], batches: ObserveBat
   const startedAt = performance.now()
 
   // 1. 메트릭 추출
-  const promptTimes = timeline
-    .filter((item) => item.type === 'PROMPT_SUBMIT')
-    .map((item) => Date.parse(item.timestamp))
-    .filter((time) => !Number.isNaN(time))
-    .sort((a, b) => a - b)
+  const times = (type: string) =>
+    timeline
+      .filter((item) => item.type === type)
+      .map((item) => Date.parse(item.timestamp))
+      .filter((time) => !Number.isNaN(time))
+      .sort((a, b) => a - b)
+  const promptTimes = times('PROMPT_SUBMIT')
+  const responseEnds = times('AI_RESPONSE_END')
 
   const totalPrompts = promptTimes.length
-  let avgInterval = 0
-  let refinementLoops = 0
-  if (promptTimes.length > 1) {
-    let sum = 0
-    for (let i = 1; i < promptTimes.length; i++) {
-      const gap = promptTimes[i] - promptTimes[i - 1]
-      sum += gap
-      if (gap < REFINEMENT_INTERVAL_MS) refinementLoops++
+  let episodes = totalPrompts > 0 ? 1 : 0
+  const thinkTimes: number[] = []
+  let endIndex = 0
+  for (let i = 1; i < promptTimes.length; i++) {
+    const previous = promptTimes[i - 1]
+    const current = promptTimes[i]
+    // 직전 질문과 이번 질문 사이에 끝난 마지막 AI 답변
+    let lastEnd: number | null = null
+    while (endIndex < responseEnds.length && responseEnds[endIndex] <= current) {
+      if (responseEnds[endIndex] > previous) lastEnd = responseEnds[endIndex]
+      endIndex++
     }
-    avgInterval = round2(sum / (promptTimes.length - 1) / 1000)
+    if (current - previous > IDLE_GAP_MS) {
+      episodes++
+      continue
+    }
+    thinkTimes.push((current - (lastEnd ?? previous)) / 1000)
   }
+
+  const avgInterval = thinkTimes.length > 0 ? round2(thinkTimes.reduce((a, b) => a + b, 0) / thinkTimes.length) : 0
+  const refinementLoops = thinkTimes.filter((sec) => sec < QUICK_FOLLOWUP_SEC).length
+  const chainLength = episodes > 0 ? totalPrompts / episodes : 0
 
   const decisionBatches = batches.filter((batch) => batch.type !== 'SINGLE_INTERACTION')
   const eventCount = timeline.length + batches.length
@@ -153,35 +197,26 @@ export function analyze(timeline: InteractionTimelineItem[], batches: ObserveBat
     eventTypeDistribution,
   }
 
-  // 2. 패턴 분석
-  const prompt: Level3 = totalPrompts > 50 ? 'high' : totalPrompts > 20 ? 'medium' : 'low'
-  const interval: IntervalLevel = avgInterval < 5 ? 'short' : avgInterval < 30 ? 'medium' : 'long'
-  const refinement = rateLevel(refinementLoops / Math.max(totalPrompts, 1))
+  // 2. 패턴 분석: 두 축으로 정리
+  //    speed: 답을 받고 얼마나 빨리 다음 행동으로 넘어가는가 (1 = 바로, 0 = 오래 생각)
+  //    depth: 한 번 시작하면 얼마나 길게 이어서 묻는가 (1 = 길게, 0 = 한두 번 묻고 끝)
+  const speed = thinkTimes.length > 0
+    ? clamp01((Math.log(SLOW_THINK_SEC) - Math.log(Math.max(avgInterval, 1))) / (Math.log(SLOW_THINK_SEC) - Math.log(FAST_THINK_SEC)))
+    : 0.5
+  const depth = clamp01((chainLength - 1) / (DEEP_CHAIN - 1))
+
+  const prompt: Level3 = depth >= 0.6 ? 'high' : depth >= 0.25 ? 'medium' : 'low'
+  const interval: IntervalLevel = thinkTimes.length === 0 ? 'medium' : avgInterval < 15 ? 'short' : avgInterval < 60 ? 'medium' : 'long'
+  const refinement = thinkTimes.length === 0 ? 'low' : rateLevel(refinementLoops / thinkTimes.length)
   const decision = rateLevel(decisionBatches.length / Math.max(eventCount, 1))
 
-  // 3. 행동 점수화
-  const scores: Record<StyleName, number> = {
-    'AI-Driven Executor': 0,
-    'AI-Assisted Thinker': 0,
-    'AI Checker': 0,
-    'Balanced Collaborator': 0,
+  // 3. 행동 점수화: 각 스타일 기준점과의 거리
+  const scores = {} as Record<StyleName, number>
+  for (const name of STYLE_NAMES) {
+    const p = PROTOTYPES[name]
+    const distance2 = (speed - p.speed) ** 2 + (depth - p.depth) ** 2
+    scores[name] = Math.exp(-distance2 / (2 * SPREAD * SPREAD))
   }
-  if (prompt === 'high') scores['AI-Driven Executor'] += 0.35
-  if (interval === 'short') scores['AI-Driven Executor'] += 0.35
-  if (refinement === 'low') scores['AI-Driven Executor'] += 0.2
-
-  if (prompt === 'medium') scores['AI-Assisted Thinker'] += 0.25
-  if (interval === 'long') scores['AI-Assisted Thinker'] += 0.35
-  if (refinement === 'high') scores['AI-Assisted Thinker'] += 0.3
-
-  if (prompt === 'low') scores['AI Checker'] += 0.4
-  if (interval === 'long') scores['AI Checker'] += 0.3
-  if (refinement === 'low') scores['AI Checker'] += 0.2
-
-  if (prompt === 'medium') scores['Balanced Collaborator'] += 0.3
-  if (interval === 'medium') scores['Balanced Collaborator'] += 0.3
-  if (refinement === 'medium') scores['Balanced Collaborator'] += 0.25
-
   const total = STYLE_NAMES.reduce((sum, name) => sum + scores[name], 0)
   for (const name of STYLE_NAMES) {
     scores[name] = total > 0 ? round2(scores[name] / total) : 0.25
@@ -192,6 +227,7 @@ export function analyze(timeline: InteractionTimelineItem[], batches: ObserveBat
   for (const name of STYLE_NAMES) {
     if (scores[name] > scores[style]) style = name
   }
+  if (totalPrompts === 0) style = 'Balanced Collaborator'
 
   // AI 도구별 사용 비율
   const toolCounts: Record<string, number> = {}
@@ -209,6 +245,7 @@ export function analyze(timeline: InteractionTimelineItem[], batches: ObserveBat
 
   return {
     style,
+    axes: { speed: round2(speed), depth: round2(depth) },
     relativeStyles: scores,
     levels: { prompt, interval, refinement, decision },
     metrics,
@@ -300,10 +337,11 @@ export function fallbackInsights(analysis: Analysis, lang: Lang): string[] {
   const text = FALLBACK_INSIGHT_TEXT[lang]
   const { totalPrompts, avgInterval } = analysis.metrics
   const insights: string[] = []
-  if (totalPrompts > 30) insights.push(text.active)
-  else if (totalPrompts < 10) insights.push(text.selective)
-  if (avgInterval < 10) insights.push(text.quick)
-  else if (avgInterval > 30) insights.push(text.careful)
+  const { prompt, interval } = analysis.levels
+  if (prompt === 'high' && totalPrompts >= 10) insights.push(text.active)
+  else if (prompt === 'low') insights.push(text.selective)
+  if (interval === 'short' && avgInterval > 0) insights.push(text.quick)
+  else if (interval === 'long') insights.push(text.careful)
   if (insights.length === 0) insights.push(text.balanced)
   return insights
 }
