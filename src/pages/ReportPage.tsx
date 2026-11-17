@@ -488,7 +488,13 @@ const ReportPage = () => {
             >
               <h2 className="text-white text-xl font-semibold">{language === 'ko' ? '기록된 행동' : 'Recorded activity'}</h2>
               <p className="text-white/45 text-xs mt-1 mb-6">
-                {language === 'ko' ? '분석에 쓰인 기록입니다. 내용 없이 언제 무엇이 일어났는지만 남습니다.' : 'The records used for this analysis: only what happened and when, never content.'}
+                {graphData?.detail && graphData.detail.prompts > 0
+                  ? (language === 'ko'
+                    ? `분석에 쓰인 기록입니다. 상세 분석을 켠 동안 보낸 질문 ${graphData.detail.prompts}개는 요청 유형과 글자 수도 함께 기록됐습니다. 질문 텍스트는 저장하지 않습니다.`
+                    : `The records used for this analysis. For the ${graphData.detail.prompts} prompts sent with detailed analysis on, request type and length were also recorded. Prompt text is never stored.`)
+                  : (language === 'ko'
+                    ? '분석에 쓰인 기록입니다. 내용 없이 언제 무엇이 일어났는지만 남습니다.'
+                    : 'The records used for this analysis: only what happened and when, never content.')}
               </p>
 
               {Object.keys(eventDistribution).length === 0 ? (

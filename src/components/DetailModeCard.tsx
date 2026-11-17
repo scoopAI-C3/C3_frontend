@@ -138,7 +138,8 @@ const DetailModeCard = ({ onConsentViewChange }: DetailModeCardProps) => {
   const openConsent = async () => {
     const info = await readPageInfo();
     setPage(info);
-    setScope(info ? "conversation" : "1h");
+    // "이 대화만"은 새 대화에서 꺼져 헷갈리기 쉬워 기본값은 시간 범위로 둔다
+    setScope("1h");
     setAgreed(false);
     setConsentOpen(true);
     onConsentViewChange(true);
@@ -266,7 +267,10 @@ const DetailModeCard = ({ onConsentViewChange }: DetailModeCardProps) => {
       </div>
       {active && mode ? (
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-sm text-white/60">{remainingText(mode, language)}</span>
+          <span className="text-sm text-white/60">
+            {remainingText(mode, language)}
+            {mode.scope === "conversation" && mode.conversation ? ` · ${mode.conversation.host}` : ""}
+          </span>
           <button onClick={turnOff} className="cursor-pointer rounded-lg bg-white/10 px-3 py-1.5 text-sm text-white hover:bg-white/15">
             {c.turnOff}
           </button>

@@ -58,6 +58,7 @@ const SessionResultDisplay = ({ data, isFromSurvey = false }: SessionResultDispl
             dailyTimeline={data.dailyTimeline}
             relativeStyles={data.relativeStyles}
             aiToolUsage={data.aiToolUsage}
+            detailPrompts={data.detailPrompts ?? 0}
           />
         )}
 

@@ -98,6 +98,8 @@ export interface SessionResultData {
   sessionId: string
   /** 분석에 쓰인 질문 수 (0이면 아직 보여 줄 결과가 없음) */
   totalPrompts?: number
+  /** 상세 분석으로 요청 유형이 기록된 질문 수 */
+  detailPrompts?: number
   primaryStyle: PrimaryStyle
   styleDetail: StyleDetail
   dataSummary: DataSummary

@@ -10,6 +10,8 @@ interface TimelineSectionProps {
   dailyTimeline: DailyTimeline;
   relativeStyles: Record<string, number>;
   aiToolUsage: Record<string, number>;
+  /** 상세 분석으로 요청 유형이 기록된 질문 수 */
+  detailPrompts?: number;
 }
 
 const TOOL_COLORS = ["#6C47B5", "#8F57FF", "#362F45"];
@@ -167,7 +169,7 @@ const TOOL_NAMES: Record<string, string> = { chatgpt: 'ChatGPT', claude: 'Claude
 const BAR_COLOR = "#643E83";      
 const BAR_BG_COLOR = "#211F26";    
 
-const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage }: TimelineSectionProps) => {
+const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage, detailPrompts = 0 }: TimelineSectionProps) => {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const [isSharing, setIsSharing] = useState(false);
@@ -228,9 +230,13 @@ const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage
               </p>
             </div>
             <p className="mt-2 text-white/45 text-xs leading-relaxed">
-              {language === 'ko'
-                ? '질문을 주고받은 구간마다 어떤 흐름이었는지 보여 줍니다. 무엇을 물었는지는 보지 않고 시간 흐름으로만 판단합니다. 상세 분석을 켜면 요청 유형도 함께 표시됩니다.'
-                : 'Shows what each back-and-forth with AI looked like, judged from timing only, not content. Turn on detailed analysis to also see request types.'}
+              {detailPrompts > 0
+                ? (language === 'ko'
+                  ? `질문을 주고받은 구간마다 어떤 흐름이었는지 보여 줍니다. 상세 분석을 켠 동안 보낸 질문 ${detailPrompts}개는 요청 유형까지 함께 표시됩니다.`
+                  : `Shows what each back-and-forth with AI looked like. The ${detailPrompts} prompts sent with detailed analysis on also show their request type.`)
+                : (language === 'ko'
+                  ? '질문을 주고받은 구간마다 어떤 흐름이었는지 보여 줍니다. 무엇을 물었는지는 보지 않고 시간 흐름으로만 판단합니다. 상세 분석을 켜면 요청 유형도 함께 표시됩니다.'
+                  : 'Shows what each back-and-forth with AI looked like, judged from timing only, not content. Turn on detailed analysis to also see request types.')}
             </p>
             {dailyTimeline.events.length > 0 && (
               <>

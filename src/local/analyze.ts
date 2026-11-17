@@ -459,6 +459,7 @@ export function toResult(sessionId: string, analysis: Analysis, lang: Lang): Ses
   return {
     sessionId,
     totalPrompts: analysis.metrics.totalPrompts,
+    detailPrompts: analysis.detail?.prompts ?? 0,
     primaryStyle: { typeCode, displayName: analysis.style, description: info.description },
     styleDetail: TYPE_CONTENTS[typeCode][lang],
     dataSummary: dataSummary(analysis),
