@@ -14,7 +14,6 @@ function detectPlatform(): PlatformType | null {
   if (host.includes('chatgpt.com')) return 'chat.openai.com'
   if (host.includes('claude.ai')) return 'claude.ai'
   if (host.includes('gemini.google.com')) return 'gemini.google.com'
-  if (host.includes('copilot.microsoft.com')) return 'copilot.microsoft.com'
   return null
 }
 
@@ -238,38 +237,35 @@ let lastAiResponseEndTime = 0
 const AI_EVENT_DEBOUNCE = 2000
 
 // 플랫폼별 셀렉터 정의
+// 2026-11-17 실제 화면에서 확인한 규칙. 사이트 구조가 바뀌면 여기를 고친다.
+// 언어에 따라 바뀌는 aria-label(예: "중지", "Stop")에는 기대지 않는다.
+// 질문 한 개당 정확히 한 요소만 걸리도록 넓은 패턴(class*="user" 등)은 쓰지 않는다.
 const SELECTORS: Record<PlatformType, {
   userMessage: string
   assistantMessage: string
   streamingIndicator: string
 }> = {
   'chat.openai.com': {
-    userMessage: '[data-message-author-role="user"]',
-    assistantMessage: '[data-message-author-role="assistant"]',
-    streamingIndicator: 'button[aria-label="Stop generating"], button[data-testid="stop-button"], .result-streaming, [data-is-streaming="true"]'
+    userMessage: '[data-user-message-bubble="true"], [data-message-author-role="user"]',
+    assistantMessage: '[data-dil-response], [data-message-author-role="assistant"]',
+    streamingIndicator: '[data-talvt-turn-state="in_progress"], button[data-testid="stop-button"]'
   },
   'claude.ai': {
-    userMessage: '[data-testid*="human"], [data-testid*="user"], .human-turn, .user-message, div[class*="human"], div[class*="user-turn"], [data-is-user-message="true"]',
-    assistantMessage: '[data-testid*="assistant"], [data-testid*="claude"], .assistant-turn, .claude-message, div[class*="assistant"], div[class*="claude-turn"], [data-is-assistant-message="true"], [data-testid="message-content"]',
-    streamingIndicator: '[data-is-streaming="true"]'
+    userMessage: '[data-testid="user-message"]',
+    assistantMessage: '[data-testid="assistant-message"]',
+    streamingIndicator: '[data-is-streaming="true"], [data-testid="chat-input-stop"]'
   },
   'gemini.google.com': {
-    userMessage: '[data-turn-role="user"], .user-query, user-query, [class*="query-content"], [class*="user-message"], [class*="human-turn"], message-content[data-message-author-role="user"]',
-    assistantMessage: '[data-turn-role="model"], .model-response, model-response, [class*="response-content"], [class*="model-message"], [class*="assistant-turn"], message-content[data-message-author-role="model"]',
-    streamingIndicator: '[data-loading="true"], .loading-indicator, .thinking-indicator, [aria-busy="true"], .streaming, [class*="loading"], [class*="thinking"], .response-streaming, loading-indicator'
+    userMessage: 'user-query',
+    assistantMessage: 'model-response',
+    streamingIndicator: '.send-button mat-icon[fonticon="stop"], .send-button mat-icon[data-mat-icon-name="stop"]'
   },
-  'copilot.microsoft.com': {
-    userMessage: '[data-content="user-message"], .user-message, [class*="UserMessage"], cib-message-group[source="user"]',
-    assistantMessage: '[data-content="ai-message"], .ai-message, [class*="BotMessage"], cib-message-group[source="bot"]',
-    streamingIndicator: '[data-is-streaming="true"], .typing-indicator, [class*="typing"], cib-typing-indicator, [aria-busy="true"]'
-  }
 }
 
 const INIT_DELAY: Record<PlatformType, number> = {
   'chat.openai.com': 3000,
   'claude.ai': 2000,
   'gemini.google.com': 2000,
-  'copilot.microsoft.com': 3000
 }
 
 const selectors = platform ? SELECTORS[platform] : null
@@ -336,11 +332,6 @@ function setupMessageDetection() {
           if (newCount > lastUserMessageCount) {
             triggerUserMessage()
             lastUserMessageCount = newCount
-          } else {
-            if (platform === 'gemini.google.com') {
-              console.log('[HANDOFF] Gemini: Enter detected, treating as message submit')
-              triggerUserMessage()
-            }
           }
         }, 1000)
       }
@@ -357,9 +348,6 @@ function setupMessageDetection() {
         if (newCount > lastUserMessageCount) {
           triggerUserMessage()
           lastUserMessageCount = newCount
-        } else if (platform === 'gemini.google.com') {
-          console.log('[HANDOFF] Gemini: Send button clicked, treating as message submit')
-          triggerUserMessage()
         }
       }, 1000)
     }

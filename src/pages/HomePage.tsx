@@ -59,7 +59,7 @@ const COPY = {
     steps: [
       {
         title: "평소처럼 AI 사용",
-        body: "ChatGPT, Claude, Gemini, Copilot에서 하던 대로 대화하세요. 따로 누를 것도, '분석 중'이라는 느낌도 없습니다.",
+        body: "ChatGPT, Claude, Gemini에서 하던 대로 대화하세요. 따로 누를 것도, '분석 중'이라는 느낌도 없습니다.",
       },
       {
         title: "행동만 기록",
@@ -78,7 +78,7 @@ const COPY = {
     resultItems: [
       { title: "스타일 카드", body: "오늘의 협업 스타일과 강점, 주의할 점, 한 줄 팁" },
       { title: "데이터 요약", body: "AI 사용 빈도, 질문 간 평균 간격, 수정·재질문 비율, 결정 구간 빈도" },
-      { title: "도구별 사용 비율", body: "ChatGPT·Claude·Gemini·Copilot 중 어디서 얼마나 썼는지" },
+      { title: "도구별 사용 비율", body: "ChatGPT·Claude·Gemini 중 어디서 얼마나 썼는지" },
       { title: "분석 리포트", body: "패턴 분석과 단계별 분석 흐름, AI가 정리한 인사이트" },
     ],
     notEyebrow: "HANDOFF is NOT an AI evaluation tool",
@@ -134,7 +134,7 @@ const COPY = {
     steps: [
       {
         title: "Use AI as usual",
-        body: "Chat on ChatGPT, Claude, Gemini or Copilot as you always do. Nothing to click, nothing that feels like being analyzed.",
+        body: "Chat on ChatGPT, Claude or Gemini as you always do. Nothing to click, nothing that feels like being analyzed.",
       },
       {
         title: "Only behavior is recorded",
@@ -153,7 +153,7 @@ const COPY = {
     resultItems: [
       { title: "Style card", body: "Today's collaboration style, strengths, cautions and a one-line tip" },
       { title: "Data summary", body: "Usage frequency, average prompt interval, refinement rate and decision frequency" },
-      { title: "Usage by tool", body: "How much you used ChatGPT, Claude, Gemini and Copilot" },
+      { title: "Usage by tool", body: "How much you used ChatGPT, Claude and Gemini" },
       { title: "Analysis report", body: "Pattern analysis, the step-by-step analysis flow and AI-written insights" },
     ],
     notEyebrow: "HANDOFF is NOT an AI evaluation tool",
@@ -181,7 +181,7 @@ const COPY = {
   },
 };
 
-const SITES = ["ChatGPT", "Claude", "Gemini", "Copilot"];
+const SITES = ["ChatGPT", "Claude", "Gemini"];
 
 /**
  * 같은 페이지 안 섹션으로 이동.

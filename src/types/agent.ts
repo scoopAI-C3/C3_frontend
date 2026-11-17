@@ -7,7 +7,7 @@ export type EventType =
   | 'AI_RESPONSE_START'
   | 'AI_RESPONSE_END'
 
-export type PlatformType = 'chat.openai.com' | 'claude.ai' | 'gemini.google.com' | 'copilot.microsoft.com'
+export type PlatformType = 'chat.openai.com' | 'claude.ai' | 'gemini.google.com'
 
 /** 상세 분석이 켜져 있을 때만 붙는 정보. 텍스트는 들어가지 않는다. */
 export interface EventDetail {

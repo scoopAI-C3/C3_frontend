@@ -12,7 +12,8 @@
 - [ ] 재배포 후 확장 프로그램에서 분석을 실행하면 리포트의 "LLM 상세 분석"에 LLM이 쓴 문장이 나온다 (함수가 실패하면 규칙 기반 문장이 대신 나오므로, 문장이 매번 같다면 함수 로그를 확인)
 - [x] `public/privacy.html` 의 문의 메일을 넣었다 (haeun9634@naver.com)
 - [ ] `npm run zip` 으로 `handoff-extension.zip` 을 만들었다
-- [ ] ChatGPT · Claude · Gemini · Copilot 각각에서 프롬프트 1회 전송 시 팝업 RECENT EVENTS에 3줄(전송/응답 시작/응답 종료)이 찍히는지 직접 확인했다 (`src/content.ts` 의 `SELECTORS`)
+- [x] ChatGPT · Claude · Gemini 실제 화면에서 감지 규칙 확인 (2026-11-17, `src/content.ts` 의 `SELECTORS`). Copilot은 copilot.com으로 이전하며 로그인이 필요해져 첫 출시에서 제외
+- [ ] 확장 프로그램을 개발자 모드로 올려 세 사이트에서 팝업 RECENT EVENTS에 3줄(전송/응답 시작/응답 종료)이 찍히는지 최종 확인
 - [ ] 개발자 계정 등록(1회 $5), 2단계 인증, 문의 이메일 인증
 
 ## 1. 스토어 등록정보
@@ -36,14 +37,14 @@
 
 English (매니페스트 `description` 과 동일):
 
-> See how you collaborate with AI on ChatGPT, Claude, Gemini and Copilot. Timing-based; reads prompts only if you opt in.
+> See how you collaborate with AI on ChatGPT, Claude and Gemini. Timing-based; reads prompts only if you opt in.
 
 ### 상세 설명 — 한국어
 
 ```
 당신은 AI와 어떻게 협업하고 있나요?
 
-HANDOFF는 ChatGPT, Claude, Gemini, Copilot을 쓰는 방식을 분석해 나의 AI 협업 스타일을 알려 주는 확장 프로그램입니다.
+HANDOFF는 ChatGPT, Claude, Gemini를 쓰는 방식을 분석해 나의 AI 협업 스타일을 알려 주는 확장 프로그램입니다.
 
 ■ 이렇게 동작합니다
 1. 평소처럼 AI와 대화합니다.
@@ -72,7 +73,7 @@ HANDOFF는 ChatGPT, Claude, Gemini, Copilot을 쓰는 방식을 분석해 나의
 · 기본 분석은 프롬프트와 AI 응답의 내용을 읽지 않습니다. 시점과 이벤트 종류만 사용합니다.
 · 기록은 브라우저 안에만 저장됩니다. 사용자 기록을 보관하는 서버가 없습니다.
 · 로그인이 없고 이름·이메일·계정 정보를 수집하지 않습니다.
-· 지원하는 4개 사이트에서만 동작합니다.
+· 지원하는 3개 사이트에서만 동작합니다.
 · 팝업의 Monitoring 스위치로 언제든 끌 수 있습니다.
 
 한국어와 영어를 지원합니다.
@@ -83,7 +84,7 @@ HANDOFF는 ChatGPT, Claude, Gemini, Copilot을 쓰는 방식을 분석해 나의
 ```
 How do you collaborate with AI?
 
-HANDOFF analyzes the way you work with ChatGPT, Claude, Gemini and Copilot and shows you your AI collaboration style.
+HANDOFF analyzes the way you work with ChatGPT, Claude and Gemini and shows you your AI collaboration style.
 
 ■ How it works
 1. Chat with AI as you normally do.
@@ -112,7 +113,7 @@ While it's on, an indicator shows at the bottom right of the AI site, where you 
 · By default, the content of your prompts and AI responses is never read. Only timing and event type are used.
 · Your records stay in your browser. There is no server keeping user records.
 · No sign-in. No name, email or account information is collected.
-· Runs only on the four supported sites.
+· Runs only on the three supported sites.
 · Turn it off at any time with the Monitoring switch in the popup.
 
 Available in Korean and English.
@@ -123,7 +124,7 @@ Available in Korean and English.
 ### 단일 목적 (Single purpose)
 
 ```
-HANDOFF has a single purpose: to analyze the timing pattern of the user's interactions with AI chat services (ChatGPT, Claude, Gemini, Microsoft Copilot) and show the user their AI collaboration style.
+HANDOFF has a single purpose: to analyze the timing pattern of the user's interactions with AI chat services (ChatGPT, Claude, Gemini) and show the user their AI collaboration style.
 ```
 
 ### 권한 사용 이유
@@ -140,10 +141,10 @@ All user data is stored locally with this permission; there is no backend databa
 Used for a single one-minute idle timer. When the user has stopped prompting for one minute, the service worker saves a summary of the accumulated interactions to local storage. An alarm is required because setTimeout does not survive Manifest V3 service worker termination.
 ```
 
-**호스트 권한 (content script: chatgpt.com, claude.ai, gemini.google.com, copilot.microsoft.com)**
+**호스트 권한 (content script: chatgpt.com, claude.ai, gemini.google.com)**
 
 ```
-The content script runs only on these four AI chat sites. By default it observes DOM changes to detect three moments: when the user submits a prompt, when the AI response starts, and when it ends, and records only the event type and timestamp.
+The content script runs only on these three AI chat sites. By default it observes DOM changes to detect three moments: when the user submits a prompt, when the AI response starts, and when it ends, and records only the event type and timestamp.
 
 Optional "Detailed analysis": only after the user opens a consent screen in the popup, reads what is accessed, checks an explicit consent box and chooses a scope (this conversation only, 30 minutes, 1 hour or today), the content script reads the text of prompts the user sends within that scope and classifies each one into a request type (do / opinion / check / revise / info) inside the browser. The text is discarded immediately after classification and is never stored or transmitted; only the type label and character counts are kept locally. A visible indicator is shown on the page while it is active and lets the user turn it off. The scope expires automatically.
 
@@ -188,7 +189,7 @@ https://handofff.vercel.app/privacy.html
 ```
 No account is required.
 
-1. Install the extension and open https://chatgpt.com (or claude.ai, gemini.google.com, copilot.microsoft.com) and sign in with any account of your own.
+1. Install the extension and open https://chatgpt.com (or claude.ai, gemini.google.com) and sign in with any account of your own.
 2. Send two or three prompts.
 3. Click the HANDOFF toolbar icon. The popup shows "Observing" and the recent events (prompt submitted / AI response started / finished). Only event type and time are recorded, never message text.
 4. Click "Open Full Dashboard", then "View Collaboration Style" to see the analysis result.
@@ -196,7 +197,7 @@ No account is required.
 
 The Monitoring switch in the popup stops all collection.
 
-To test the optional Detailed analysis: open the popup while a ChatGPT/Claude/Gemini/Copilot chat is the active tab, click "Turn on", read the consent screen, check the consent box, choose a scope and click "Agree and start". An indicator appears at the bottom right of the chat page. Send a few prompts, then open the report: a "Request Types" section shows the classification. Prompt text is never stored (you can inspect chrome.storage to confirm) and can be turned off from the indicator or the popup.
+To test the optional Detailed analysis: open the popup while a ChatGPT/Claude/Gemini chat is the active tab, click "Turn on", read the consent screen, check the consent box, choose a scope and click "Agree and start". An indicator appears at the bottom right of the chat page. Send a few prompts, then open the report: a "Request Types" section shows the classification. Prompt text is never stored (you can inspect chrome.storage to confirm) and can be turned off from the indicator or the popup.
 ```
 
 ## 5. 등록 후 할 일
