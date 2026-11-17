@@ -9,8 +9,8 @@ import { useLanguage } from "../../contexts/LanguageContext";
 const COPY = {
   ko: {
     eyebrow: "How we measure",
-    title: "그럼 무엇으로 판단하나요?",
-    lead: "무엇을 물었는지가 아니라 언제 물었는지를 봅니다. HANDOFF가 기록하는 건 아래 세 개의 시각뿐입니다.",
+    title: "프롬프트 대신 시간을 봅니다",
+    lead: "무엇을 물었는지가 아니라 언제 물었는지를 기록합니다. 아래 세 시각만으로도 AI를 어떻게 쓰는지가 드러납니다.",
     timeline: {
       sent: "질문 보냄",
       writing: "AI가 답을 쓰는 중",
@@ -50,8 +50,8 @@ const COPY = {
   },
   en: {
     eyebrow: "How we measure",
-    title: "So what does it look at?",
-    lead: "We look at when you asked, not what you asked. HANDOFF records only the three moments below.",
+    title: "We look at timing, not prompts",
+    lead: "We record when you asked, not what you asked. These three moments alone show how you work with AI.",
     timeline: {
       sent: "Prompt sent",
       writing: "AI is writing",

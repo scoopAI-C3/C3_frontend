@@ -53,7 +53,7 @@ const COPY = {
       "질문이 더 이상 이어지지 않고, AI의 답변이 그대로 행동으로 이어지는 순간. 이 지점에서 판단은 사용자에게서 AI로 넘어갑니다.",
     signalsTitle: "어떻게 포착하나요",
     signals: ["답변 후 다음 질문까지의 생각 시간", "답변 직후 다시 묻기 (수정·재질문)", "한 번에 이어 묻는 횟수", "대화를 마치는 시점"],
-    measureLink: "그럼 무엇으로 판단하나요?",
+    measureLink: "무엇으로 판단하는지 보기",
     howEyebrow: "How it works",
     howTitle: "설치하고, 평소처럼 쓰면 됩니다",
     steps: [
@@ -128,7 +128,7 @@ const COPY = {
       "The moment questions stop and the AI's answer turns straight into action. At that point, the decision moves from you to AI.",
     signalsTitle: "How we detect it",
     signals: ["Think time between an answer and your next prompt", "Re-asking right after an answer", "How many prompts you send in a row", "When a conversation ends"],
-    measureLink: "So what does it look at?",
+    measureLink: "See what we measure",
     howEyebrow: "How it works",
     howTitle: "Install it and use AI as usual",
     steps: [
