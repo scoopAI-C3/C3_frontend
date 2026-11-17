@@ -51,6 +51,14 @@ const StyleResultSection = ({ primaryStyle, styleDetail }: StyleResultSectionPro
           </p>
         </ScrollReveal>
       </div>
+      {/* 첫 화면에서 결과가 끝난 것처럼 보이지 않도록 아래에 더 있다는 표시 */}
+      <button
+        onClick={() => window.scrollBy({ top: window.innerHeight * 0.9, behavior: "smooth" })}
+        className="mt-auto flex cursor-pointer flex-col items-center gap-1 pt-16 text-sm text-white/60 hover:text-white"
+      >
+        {language === 'ko' ? '데이터 분석, 강점과 주의점, 타임라인 보기' : 'See data, strengths and timeline'}
+        <span className="animate-bounce text-lg">↓</span>
+      </button>
     </section>
   );
 };

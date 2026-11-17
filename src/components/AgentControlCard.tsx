@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import type { AgentEvent, AgentStatusType, RiskType, DisplayEvent } from "../types/agent";
 import { PRIVACY_URL } from "../constants/links";
 import DetailModeCard from "./DetailModeCard";
+import { useLanguage } from "../contexts/LanguageContext";
 
 function AgentControlCard() {
   const [isMonitoring, setIsMonitoring] = useState(true);
@@ -9,6 +10,7 @@ function AgentControlCard() {
   const [decisionRisk, setDecisionRisk] = useState<RiskType>("Low");
   const [recentEvents, setRecentEvents] = useState<DisplayEvent[]>([]);
   const [consentView, setConsentView] = useState(false);
+  const { language } = useLanguage();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // 동의 화면을 열고 닫을 때 맨 위부터 보이게
@@ -205,9 +207,9 @@ function AgentControlCard() {
 
       <button
         className="w-full mt-auto py-3 text-sm text-[#A36EFF] hover:text-[#FF7DFD] font-medium hover:bg-white/5 rounded-lg transition-colors"
-        onClick={() => chrome.tabs.create({ url: chrome.runtime.getURL('index.html#/landing') })}
+        onClick={() => chrome.tabs.create({ url: chrome.runtime.getURL('index.html#/dashboard') })}
       >
-        Open Full Dashboard →
+        {language === 'ko' ? '내 결과 보기 →' : 'View my result →'}
       </button>
       <a
         href={PRIVACY_URL}

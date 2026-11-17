@@ -94,6 +94,8 @@ export interface DailyTimeline {
 
 export interface SessionResultData {
   sessionId: string
+  /** 분석에 쓰인 질문 수 (0이면 아직 보여 줄 결과가 없음) */
+  totalPrompts?: number
   primaryStyle: PrimaryStyle
   styleDetail: StyleDetail
   dataSummary: DataSummary

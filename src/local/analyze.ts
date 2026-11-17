@@ -351,6 +351,7 @@ export function toResult(sessionId: string, analysis: Analysis, lang: Lang): Ses
   const typeCode = toTypeCode(analysis.style)
   return {
     sessionId,
+    totalPrompts: analysis.metrics.totalPrompts,
     primaryStyle: { typeCode, displayName: analysis.style, description: info.description },
     styleDetail: TYPE_CONTENTS[typeCode][lang],
     dataSummary: dataSummary(analysis),

@@ -81,14 +81,13 @@ const ReportPage = () => {
       try {
         let currentSessionId: string | undefined;
 
-        // 먼저 localStorage에서 sharedSessionId 확인 (공유 페이지에서 온 경우)
-        const sharedSessionId = localStorage.getItem("sharedSessionId");
-        if (sharedSessionId) {
-          currentSessionId = sharedSessionId;
-        } else if (typeof chrome !== "undefined" && chrome.storage?.local) {
-          // 크롬 확장 환경에서는 chrome.storage 사용
+        if (typeof chrome !== "undefined" && chrome.storage?.local) {
+          // 확장 프로그램: 항상 지금 세션 (공유 링크용 값이 남아 있어도 쓰지 않는다)
           const data = await chrome.storage.local.get(["sessionId"]) as { sessionId?: string };
           currentSessionId = data.sessionId;
+        } else {
+          // 웹: 공유 링크로 받은 결과
+          currentSessionId = localStorage.getItem("sharedSessionId") ?? undefined;
         }
 
         if (currentSessionId) {
