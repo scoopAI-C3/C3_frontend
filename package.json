@@ -1,16 +1,16 @@
 {
-  "name": "my-ai-tracker",
+  "name": "handoff-extension",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "zip": "npm run build && rm -f handoff-extension.zip && cd dist && zip -qr ../handoff-extension.zip . -x '.vite/*' -x '*.DS_Store'"
   },
   "dependencies": {
-    "axios": "^1.13.2",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
