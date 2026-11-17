@@ -105,7 +105,7 @@ export const getSessionGraph = async (sessionId: string, language?: string): Pro
   if (!record) return fail('SESSION404', 'Session not found')
   if (!record.analysis) return fail('SESSION400', 'Session not analyzed')
   const lang = toLang(language)
-  return ok(toGraph(sessionId, record.analysis, lang, record.llmInsights?.[lang]))
+  return ok({ ...toGraph(sessionId, record.analysis, lang, record.llmInsights?.[lang]), analyzedAt: record.analyzedAt })
 }
 
 export const getSurveyResult = async (typeCode: string, language?: string): Promise<ApiResponse<SurveyResultData>> => {

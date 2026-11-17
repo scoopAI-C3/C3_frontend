@@ -17,7 +17,7 @@
  *  - 의사결정 이벤트 수는 대시보드 타임라인에 표시되는 구간 수와 같은 값을 쓴다
  *    (서버에서는 항상 0으로 집계되던 값).
  */
-import { INTENTS, INTENT_STYLE_WEIGHTS, type Intent } from './intent'
+import { INTENTS, INTENT_LABELS, INTENT_STYLE_WEIGHTS, type Intent } from './intent'
 import type {
   DataSummary,
   DetailSummary,
@@ -90,9 +90,80 @@ export type BatchType = 'REFINEMENT_LOOP' | 'RAPID_INTERACTION' | 'INTERACTION_S
 export interface ObserveBatch {
   at: string // ISO 시각
   type: BatchType
+  /** 세션 시작부터의 누적 값 (해커톤 버전 호환) */
   promptCount: number
   avgIntervalSec: number
   refinement: boolean
+}
+
+/** 타임라인의 한 구간: 10분 넘게 쉬기 전까지 이어진 대화 한 덩어리 */
+export interface TimelineSegment {
+  start: string // ISO
+  end: string // ISO
+  prompts: number
+  /** 답변이 끝난 뒤 다음 질문까지 평균 시간 (질문이 하나면 null) */
+  avgThinkSec: number | null
+  /** 답변 후 20초 안에 다시 물은 횟수 */
+  quickFollowups: number
+  /** 사용한 사이트 */
+  tools: string[]
+  /** 상세 분석을 켠 경우 요청 유형별 개수 */
+  intents?: Partial<Record<Intent, number>>
+}
+
+/** 타임라인을 대화 덩어리로 나눈다 */
+export function buildSegments(timeline: InteractionTimelineItem[]): TimelineSegment[] {
+  const items = timeline
+    .map((item) => ({ ...item, time: Date.parse(item.timestamp) }))
+    .filter((item) => !Number.isNaN(item.time))
+    .sort((a, b) => a.time - b.time)
+
+  const segments: TimelineSegment[] = []
+  let current: (TimelineSegment & { thinks: number[]; endTime: number; lastPrompt: number; lastEnd: number | null }) | null = null
+  const close = () => {
+    if (!current) return
+    const { thinks, endTime, lastPrompt, lastEnd, ...segment } = current
+    void lastPrompt
+    void lastEnd
+    segment.avgThinkSec = thinks.length > 0 ? round2(thinks.reduce((a, b) => a + b, 0) / thinks.length) : null
+    segment.end = new Date(endTime).toISOString()
+    segments.push(segment)
+    current = null
+  }
+
+  for (const item of items) {
+    if (item.type === 'AI_RESPONSE_END') {
+      if (current && item.time - current.lastPrompt <= IDLE_GAP_MS) {
+        current.lastEnd = item.time
+        current.endTime = Math.max(current.endTime, item.time)
+      }
+      continue
+    }
+    if (item.type !== 'PROMPT_SUBMIT') continue
+    if (!current || item.time - Math.max(current.lastPrompt, current.lastEnd ?? 0) > IDLE_GAP_MS) {
+      close()
+      current = {
+        start: item.timestamp, end: item.timestamp, prompts: 0, avgThinkSec: null, quickFollowups: 0, tools: [],
+        thinks: [], endTime: item.time, lastPrompt: item.time, lastEnd: null,
+      }
+    } else {
+      const base = current.lastEnd !== null && current.lastEnd > current.lastPrompt ? current.lastEnd : current.lastPrompt
+      const sec = (item.time - base) / 1000
+      current.thinks.push(sec)
+      if (sec < QUICK_FOLLOWUP_SEC) current.quickFollowups++
+    }
+    current.prompts++
+    current.lastPrompt = item.time
+    current.endTime = Math.max(current.endTime, item.time)
+    const tool = normalizeDomain(item.domain ?? '')
+    if (tool && !current.tools.includes(tool)) current.tools.push(tool)
+    if (item.intent) {
+      current.intents = current.intents ?? {}
+      current.intents[item.intent] = (current.intents[item.intent] ?? 0) + 1
+    }
+  }
+  close()
+  return segments
 }
 
 /** 언어와 무관한 분석 결과. 화면에 보여 줄 때 언어별 문구를 입힌다. */
@@ -102,6 +173,8 @@ export interface Analysis {
   axes?: { speed: number; depth: number }
   /** 상세 분석 결과 (동의하고 기록한 질문이 있을 때만) */
   detail?: DetailSummary
+  /** 타임라인 구간 (예전 결과에는 없을 수 있음) */
+  segments?: TimelineSegment[]
   relativeStyles: Record<StyleName, number>
   levels: {
     prompt: Level3
@@ -202,21 +275,20 @@ export function analyze(timeline: InteractionTimelineItem[], batches: ObserveBat
   const chainLength = episodes > 0 ? totalPrompts / episodes : 0
 
   const decisionBatches = batches.filter((batch) => batch.type !== 'SINGLE_INTERACTION')
-  const eventCount = timeline.length + batches.length
+  // 타임라인 구간: 10분 넘게 쉬기 전까지 이어진 대화 한 덩어리
+  const segments = buildSegments(timeline)
+  const eventCount = timeline.length
 
   const eventTypeDistribution: Record<string, number> = {}
   for (const item of timeline) {
     eventTypeDistribution[item.type] = (eventTypeDistribution[item.type] ?? 0) + 1
-  }
-  for (const batch of batches) {
-    eventTypeDistribution[batch.type] = (eventTypeDistribution[batch.type] ?? 0) + 1
   }
 
   const metrics: GraphMetrics = {
     totalPrompts,
     avgInterval,
     refinementLoops,
-    decisionBoundaries: decisionBatches.length,
+    decisionBoundaries: segments.length,
     avgPromptLength: 0, // 프롬프트 내용은 수집하지 않는다
     eventCount,
     eventTypeDistribution,
@@ -233,7 +305,7 @@ export function analyze(timeline: InteractionTimelineItem[], batches: ObserveBat
   const prompt: Level3 = depth >= 0.6 ? 'high' : depth >= 0.25 ? 'medium' : 'low'
   const interval: IntervalLevel = thinkTimes.length === 0 ? 'medium' : avgInterval < 15 ? 'short' : avgInterval < 60 ? 'medium' : 'long'
   const refinement = thinkTimes.length === 0 ? 'low' : rateLevel(refinementLoops / thinkTimes.length)
-  const decision = rateLevel(decisionBatches.length / Math.max(eventCount, 1))
+  const decision = rateLevel(segments.length / Math.max(eventCount, 1))
 
   // 3. 행동 점수화: 각 스타일 기준점과의 거리
   const scores = {} as Record<StyleName, number>
@@ -302,6 +374,7 @@ export function analyze(timeline: InteractionTimelineItem[], batches: ObserveBat
     style,
     axes: { speed: round2(speed), depth: round2(depth) },
     detail,
+    segments,
     relativeStyles: scores,
     levels: { prompt, interval, refinement, decision },
     metrics,
@@ -325,7 +398,33 @@ function formatTime(date: Date): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-function batchLabel(batch: ObserveBatch, lang: Lang): string {
+const TOOL_DISPLAY: Record<string, string> = { chatgpt: 'ChatGPT', claude: 'Claude', gemini: 'Gemini', copilot: 'Copilot' }
+
+function segmentLabel(seg: TimelineSegment, lang: Lang): string {
+  const text = EVENT_LABEL_TEXT[lang]
+  const followups = seg.prompts - 1
+  if (followups >= 1 && seg.quickFollowups / followups >= 0.5) return text.quickRetry
+  if (seg.avgThinkSec !== null && seg.avgThinkSec >= 60) return text.thoughtful
+  if (seg.prompts >= 3) return text.chain
+  if (seg.prompts === 1) return text.single
+  return text.fewTurns
+}
+
+function segmentSummary(seg: TimelineSegment, lang: Lang): string {
+  const text = EVENT_LABEL_TEXT[lang]
+  const parts = [text.prompts(seg.prompts)]
+  if (seg.avgThinkSec !== null) parts.push(text.think(Math.round(seg.avgThinkSec)))
+  if (seg.tools.length > 0) parts.push(seg.tools.map((tool) => TOOL_DISPLAY[tool] ?? tool).join(', '))
+  if (seg.intents) {
+    const intents = INTENTS.filter((intent) => (seg.intents?.[intent] ?? 0) > 0)
+      .map((intent) => `${INTENT_LABELS[lang][intent]} ${seg.intents?.[intent]}`)
+    if (intents.length > 0) parts.push(intents.join(', '))
+  }
+  return parts.join(' · ')
+}
+
+/** 예전 결과(구간 정보 없음)용 */
+function legacyBatchLabel(batch: ObserveBatch, lang: Lang): string {
   const text = EVENT_LABEL_TEXT[lang]
   if (batch.refinement) return text.refinement
   if (batch.promptCount >= 3) {
@@ -335,12 +434,20 @@ function batchLabel(batch: ObserveBatch, lang: Lang): string {
 }
 
 function timelineEvents(analysis: Analysis, lang: Lang): TimelineEvent[] {
+  if (analysis.segments) {
+    return analysis.segments.map((seg) => ({
+      start: formatTime(new Date(seg.start)),
+      end: formatTime(new Date(seg.end)),
+      label: segmentLabel(seg, lang),
+      summary: segmentSummary(seg, lang),
+    }))
+  }
   return analysis.batches.map((batch) => {
     const start = new Date(batch.at)
     return {
       start: formatTime(start),
       end: formatTime(new Date(start.getTime() + 5 * 60_000)),
-      label: batchLabel(batch, lang),
+      label: legacyBatchLabel(batch, lang),
     }
   })
 }
@@ -358,7 +465,7 @@ export function toResult(sessionId: string, analysis: Analysis, lang: Lang): Ses
     strengths: info.strengths,
     cautions: info.cautions,
     dailyTimeline: {
-      decisionCount: analysis.batches.length,
+      decisionCount: analysis.segments?.length ?? analysis.batches.length,
       events: timelineEvents(analysis, lang),
     },
     roleDistribution: null,

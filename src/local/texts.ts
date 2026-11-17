@@ -157,12 +157,26 @@ export const FALLBACK_INSIGHT_TEXT = {
 
 export const EVENT_LABEL_TEXT = {
   ko: {
+    quickRetry: '답을 보자마자 다시 물음',
+    thoughtful: '답을 충분히 읽고 생각한 뒤 질문',
+    chain: '여러 번 이어서 질문',
+    single: '한 번 묻고 마무리',
+    fewTurns: '몇 번 주고받음',
+    prompts: (n: number) => `질문 ${n}개`,
+    think: (sec: number) => `평균 생각 ${sec}초`,
     refinement: '수정·재질문 반복 → 사고 보조 중심',
     delegation: '연속 질문 후 실행 위임',
     careful: (count: number) => `연속 질문 ${count}회 → 신중한 판단`,
     interaction: 'AI와 상호작용',
   },
   en: {
+    quickRetry: 'Asked again right after the answer',
+    thoughtful: 'Read and thought before asking',
+    chain: 'Several follow-up questions',
+    single: 'Asked once and wrapped up',
+    fewTurns: 'A few back-and-forths',
+    prompts: (n: number) => `${n} prompt${n === 1 ? '' : 's'}`,
+    think: (sec: number) => `avg. ${sec}s to think`,
     refinement: 'Refinement loop → Thinking assistance',
     delegation: 'Consecutive questions → Execution delegation',
     careful: (count: number) => `Consecutive ${count} questions → Careful judgment`,

@@ -85,6 +85,8 @@ export interface TimelineEvent {
   start: string
   end: string
   label: string
+  /** 구간 요약 (질문 수, 생각 시간, 상세 분석 시 요청 유형) */
+  summary?: string
 }
 
 export interface DailyTimeline {
@@ -205,6 +207,8 @@ export interface DetailSummary {
 
 export interface SessionGraphData {
   detail?: DetailSummary
+  /** 분석한 시각 (ISO) */
+  analyzedAt?: string
   sessionId: string
   graphExecution: GraphExecution
   metrics: GraphMetrics
