@@ -84,6 +84,15 @@ function pruneWebRecords(): void {
   }
 }
 
+/** 확장 프로그램에 저장된 모든 세션 기록 */
+export async function listRecords(): Promise<SessionRecord[]> {
+  if (!hasExtensionStorage()) return []
+  const all = (await chrome.storage.local.get(null)) as Record<string, unknown>
+  return Object.entries(all)
+    .filter(([key]) => key.startsWith(PREFIX))
+    .map(([, value]) => value as SessionRecord)
+}
+
 export function newSessionId(): string {
   return 'session-' + crypto.randomUUID().slice(0, 8)
 }

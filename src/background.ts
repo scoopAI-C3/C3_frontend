@@ -29,6 +29,8 @@ interface TrackingState {
   userMessageTimestamps: number[]
   interactionTimeline: InteractionTimelineItem[]
   promptsSinceLastObserve: number
+  /** 마지막으로 저장한 시점의 타임라인 길이 (그 뒤에 쌓인 이벤트가 있으면 아직 저장 안 된 것) */
+  savedTimelineLength?: number
 }
 
 function emptyState(): TrackingState {
@@ -38,7 +40,8 @@ function emptyState(): TrackingState {
     activePlatforms: [],
     userMessageTimestamps: [],
     interactionTimeline: [],
-    promptsSinceLastObserve: 0
+    promptsSinceLastObserve: 0,
+    savedTimelineLength: 0
   }
 }
 
@@ -109,6 +112,7 @@ async function callObserveAPI(state: TrackingState, reason: string) {
     const response = await observeSession(request)
     console.log(`[HANDOFF] Session observed (${reason}):`, response)
     state.promptsSinceLastObserve = 0
+    state.savedTimelineLength = state.interactionTimeline.length
   } catch (err) {
     console.error('[HANDOFF] Failed to observe session:', err)
   }
@@ -155,7 +159,11 @@ async function handleEvent(event: AgentEvent) {
     state.interactionTimeline.push({
       type: event.type,
       domain: event.platform,
-      timestamp: new Date(event.timestamp).toISOString()
+      timestamp: new Date(event.timestamp).toISOString(),
+      // 상세 분석이 켜져 있을 때만: 요청 유형과 글자 수 (텍스트 없음)
+      ...(event.detail?.intent ? { intent: event.detail.intent } : {}),
+      ...(typeof event.detail?.length === 'number' ? { length: event.detail.length } : {}),
+      ...(typeof event.detail?.responseLength === 'number' ? { responseLength: event.detail.responseLength } : {}),
     })
   }
 
@@ -175,6 +183,7 @@ async function handleEvent(event: AgentEvent) {
       state.userMessageTimestamps = []
       state.interactionTimeline = []
       state.promptsSinceLastObserve = 0
+      state.savedTimelineLength = 0
       await chrome.alarms.clear(IDLE_ALARM)
 
       try {
@@ -245,7 +254,10 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name !== IDLE_ALARM) return
   enqueue(async () => {
     const state = await loadState()
-    if (state.currentSessionId && state.promptsSinceLastObserve > 0) {
+    // 새 질문이 없어도 마지막 답변 끝처럼 아직 저장 안 된 이벤트가 있으면 저장한다.
+    // (그러지 않으면 결과 화면을 열기 전에 브라우저를 껐을 때 마지막 답변 기록이 사라진다)
+    const unsaved = state.interactionTimeline.length > (state.savedTimelineLength ?? 0)
+    if (state.currentSessionId && (state.promptsSinceLastObserve > 0 || unsaved)) {
       await callObserveAPI(state, 'idle timeout')
       await saveState(state)
     }
@@ -256,6 +268,18 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'AGENT_EVENT') {
     enqueue(() => handleEvent(message.payload))
+      .then(() => sendResponse({ success: true }))
+      .catch((err) => sendResponse({ success: false, error: err.message }))
+    return true
+  }
+
+  // 결과 화면을 열기 직전: 아직 저장하지 않은 최신 기록을 바로 저장
+  if (message.type === 'FLUSH_SESSION') {
+    enqueue(async () => {
+      const state = await loadState()
+      await callObserveAPI(state, 'flush')
+      await saveState(state)
+    })
       .then(() => sendResponse({ success: true }))
       .catch((err) => sendResponse({ success: false, error: err.message }))
     return true

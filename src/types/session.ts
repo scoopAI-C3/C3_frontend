@@ -1,3 +1,5 @@
+import type { Intent } from '../local/intent'
+
 export interface ApiResponse<T> {
   isSuccess: boolean
   code: string
@@ -83,6 +85,8 @@ export interface TimelineEvent {
   start: string
   end: string
   label: string
+  /** 구간 요약 (질문 수, 생각 시간, 상세 분석 시 요청 유형) */
+  summary?: string
 }
 
 export interface DailyTimeline {
@@ -92,6 +96,10 @@ export interface DailyTimeline {
 
 export interface SessionResultData {
   sessionId: string
+  /** 분석에 쓰인 질문 수 (0이면 아직 보여 줄 결과가 없음) */
+  totalPrompts?: number
+  /** 상세 분석으로 요청 유형이 기록된 질문 수 */
+  detailPrompts?: number
   primaryStyle: PrimaryStyle
   styleDetail: StyleDetail
   dataSummary: DataSummary
@@ -133,6 +141,10 @@ export interface InteractionTimelineItem {
   type: string
   domain: string
   timestamp: string
+  /** 상세 분석이 켜져 있을 때만 있음 (텍스트 없이 분류 결과와 길이만) */
+  intent?: Intent
+  length?: number
+  responseLength?: number
 }
 
 export interface SessionObserveRequest {
@@ -185,7 +197,20 @@ export interface GraphPatterns {
   refinement: PatternDetail
 }
 
+/** 상세 분석 결과 (상세 분석으로 기록된 질문이 있을 때만) */
+export interface DetailSummary {
+  prompts: number
+  intents: Record<Intent, number>
+  avgPromptLength: number
+  /** 긴 답변(1,500자 이상)을 5초 안에 넘기고 다음 질문을 보낸 횟수 */
+  skimmedAnswers: number
+  longAnswers: number
+}
+
 export interface SessionGraphData {
+  detail?: DetailSummary
+  /** 분석한 시각 (ISO) */
+  analyzedAt?: string
   sessionId: string
   graphExecution: GraphExecution
   metrics: GraphMetrics

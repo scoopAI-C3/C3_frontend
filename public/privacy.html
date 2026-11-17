@@ -43,7 +43,8 @@
     <div class="box">
       <strong>핵심 요약</strong>
       <ul>
-        <li>프롬프트와 AI 응답의 <strong>내용은 수집하지 않습니다.</strong> 언제 보냈는지(시각)와 어떤 종류의 이벤트인지만 사용합니다.</li>
+        <li>기본적으로 프롬프트와 AI 응답의 <strong>내용은 읽지 않습니다.</strong> 언제 보냈는지(시각)와 어떤 종류의 이벤트인지만 사용합니다.</li>
+        <li>사용자가 <strong>동의하고 "상세 분석"을 켠 범위에서만</strong> 질문 텍스트를 읽어 브라우저 안에서 요청 유형으로 분류합니다. 텍스트는 저장하지도, 밖으로 보내지도 않습니다.</li>
         <li>기록은 <strong>브라우저 안에만</strong> 저장됩니다. 사용자 기록을 보관하는 서버가 없습니다.</li>
         <li>이름, 이메일, 계정 정보를 수집하지 않으며 로그인도 없습니다.</li>
         <li>수집한 정보를 판매하거나 광고에 사용하지 않습니다.</li>
@@ -56,25 +57,36 @@
     <table>
       <tr><th>항목</th><th>내용</th></tr>
       <tr><td>상호작용 이벤트</td><td>이벤트 종류(프롬프트 전송, AI 응답 시작·종료, 페이지 진입·이탈)와 발생 시각</td></tr>
-      <tr><td>사용한 AI 서비스</td><td>ChatGPT, Claude, Gemini, Copilot 중 어느 사이트에서 발생했는지</td></tr>
+      <tr><td>사용한 AI 서비스</td><td>ChatGPT, Claude, Gemini 중 어느 사이트에서 발생했는지</td></tr>
       <tr><td>분석 결과</td><td>위 정보로 브라우저 안에서 계산한 협업 스타일과 지표 (최근 20개 세션까지)</td></tr>
-      <tr><td>설정</td><td>수집 켜기/끄기, 언어</td></tr>
+      <tr><td>상세 분석 결과 (켠 경우만)</td><td>질문별 요청 유형(실행·의견·검증·수정·정보·기타)과 글자 수, AI 답변의 글자 수. 텍스트는 포함되지 않습니다.</td></tr>
+      <tr><td>설정</td><td>수집 켜기/끄기, 언어, 상세 분석 동의 시각과 범위</td></tr>
     </table>
 
-    <h2>2. 수집하지 않는 정보</h2>
+    <h2>2. 상세 분석 (선택)</h2>
+    <p>상세 분석은 사용자가 팝업에서 직접 켜고 동의해야만 동작합니다. 동의 화면에서 아래 내용을 확인하고 범위를 고릅니다.</p>
     <ul>
-      <li>프롬프트 및 AI 응답의 텍스트, 첨부 파일</li>
+      <li><strong>읽는 것</strong>: 사용자가 보낸 질문의 텍스트, AI 답변의 글자 수</li>
+      <li><strong>하는 일</strong>: 질문을 브라우저 안에서 요청 유형으로 분류하고, 긴 답변을 몇 초 만에 넘겼는지 확인</li>
+      <li><strong>하지 않는 것</strong>: 질문 텍스트를 저장하지 않습니다(분류 직후 버림). 텍스트를 서버나 AI로 보내지 않습니다.</li>
+      <li><strong>범위</strong>: "지금 이 대화만", "오늘만"(자정에 꺼짐), "끌 때까지" 중 선택. "이 대화만"은 다른 대화에서는 읽지 않습니다.</li>
+      <li><strong>표시와 끄기</strong>: 켜져 있는 동안 AI 사이트 화면 오른쪽 위에 표시가 보이고, 그 표시나 팝업에서 언제든 끌 수 있습니다.</li>
+    </ul>
+
+    <h2>3. 수집하지 않는 정보</h2>
+    <ul>
+      <li>프롬프트 및 AI 응답의 텍스트, 첨부 파일 (상세 분석을 켠 경우에도 텍스트는 저장·전송하지 않습니다)</li>
       <li>이름, 이메일, AI 서비스의 계정 정보, 쿠키, 비밀번호</li>
-      <li>위 4개 사이트 외의 방문 기록. 확장 프로그램은 <code>chatgpt.com</code>, <code>claude.ai</code>, <code>gemini.google.com</code>, <code>copilot.microsoft.com</code>에서만 동작합니다.</li>
+      <li>위 3개 사이트 외의 방문 기록. 확장 프로그램은 <code>chatgpt.com</code>, <code>claude.ai</code>, <code>gemini.google.com</code>에서만 동작합니다.</li>
       <li>설문 응답 내용. 설문은 브라우저 안에서만 계산됩니다.</li>
       <li>사용자나 기기를 식별하는 ID. 만들지도, 전송하지도 않습니다.</li>
     </ul>
 
-    <h2>3. 이용 목적</h2>
+    <h2>4. 이용 목적</h2>
     <p>위 정보는 협업 스타일 분석 결과와 대시보드·리포트를 보여 주는 데에만 사용합니다.</p>
 
-    <h2>4. 외부로 전송되는 정보</h2>
-    <p>브라우저 밖으로 나가는 정보는 한 가지뿐입니다. 사용자가 "협업 스타일 결과 보기"를 누르면, 리포트의 인사이트 문장을 만들기 위해 <strong>집계된 수치</strong>(프롬프트 횟수, 평균 간격, 수정 반복 횟수, 의사결정 구간 수, 등급, 스타일별 점수)와 언어 설정을 HANDOFF의 분석 함수(Vercel)를 거쳐 <strong>OpenAI</strong>에 전달합니다.</p>
+    <h2>5. 외부로 전송되는 정보</h2>
+    <p>브라우저 밖으로 나가는 정보는 한 가지뿐입니다. 사용자가 "협업 스타일 결과 보기"를 누르면, 리포트의 인사이트 문장을 만들기 위해 <strong>집계된 수치</strong>(프롬프트 횟수, 평균 간격, 수정 반복 횟수, 의사결정 구간 수, 등급, 스타일별 점수, 상세 분석을 켠 경우 요청 유형별 개수)와 언어 설정을 HANDOFF의 분석 함수(Vercel)를 거쳐 <strong>OpenAI</strong>에 전달합니다.</p>
     <ul>
       <li>프롬프트 내용, 개별 이벤트의 시각, 사용한 사이트, 식별자는 전달하지 않습니다.</li>
       <li>분석 함수는 전달받은 수치를 저장하지 않습니다. 요청 과다 방지를 위해 접속 IP가 함수와 호스팅 사업자(Vercel)의 접속 기록에 일시적으로 남을 수 있습니다.</li>
@@ -82,31 +94,35 @@
     </ul>
     <p>이 밖에 정보를 제3자에게 판매하거나 제공하지 않으며, 광고·신용 평가 목적으로 사용하지 않습니다.</p>
 
-    <h2>5. 공유 링크</h2>
+    <h2>6. 소개 페이지 방문 통계</h2>
+    <p>웹 소개 페이지(handofff.vercel.app)는 방문자 수, 페이지 조회 수, 유입 경로를 파악하기 위해 <strong>Vercel Web Analytics</strong>를 사용합니다. 쿠키를 쓰지 않고 개인을 식별하지 않는 방식으로 집계하며, 공유 링크 안에 담긴 분석 결과는 보내지 않습니다. 이 통계는 웹 페이지에만 적용되고 확장 프로그램에는 포함되지 않습니다.</p>
+
+    <h2>7. 공유 링크</h2>
     <p>사용자가 직접 "공유"를 누르면 분석 결과가 압축되어 <strong>링크 주소 자체에</strong> 담깁니다. 서버에는 저장되지 않습니다. 링크를 받은 사람은 누구나 그 결과를 볼 수 있으니 공유할 상대를 직접 선택해 주세요. 링크는 만든 뒤 24시간이 지나면 열리지 않습니다.</p>
 
-    <h2>6. 보관 및 삭제</h2>
+    <h2>8. 보관 및 삭제</h2>
     <ul>
       <li>모든 기록은 브라우저에 저장되며, 확장 프로그램을 삭제하면 함께 삭제됩니다.</li>
       <li>서버에 보관되는 사용자 기록이 없으므로 별도의 삭제 요청 절차가 필요하지 않습니다.</li>
     </ul>
 
-    <h2>7. 사용자의 선택</h2>
+    <h2>9. 사용자의 선택</h2>
     <ul>
       <li>팝업의 <strong>Monitoring</strong> 스위치를 끄면 이벤트 기록이 중단됩니다.</li>
+      <li>상세 분석은 기본으로 꺼져 있고, 켠 뒤에도 팝업이나 화면 표시에서 언제든 끌 수 있습니다.</li>
       <li>확장 프로그램을 삭제하면 모든 수집이 중단됩니다.</li>
     </ul>
 
-    <h2>8. Chrome 웹 스토어 사용자 데이터 정책 준수</h2>
+    <h2>10. Chrome 웹 스토어 사용자 데이터 정책 준수</h2>
     <p>HANDOFF는 Chrome 웹 스토어 사용자 데이터 정책(제한적 사용 요건 포함)을 준수합니다. 수집한 정보는 이 문서에 밝힌 단일 목적에만 사용합니다.</p>
 
-    <h2>9. 아동</h2>
+    <h2>11. 아동</h2>
     <p>서비스는 만 14세 미만 아동을 대상으로 하지 않으며, 아동의 정보를 의도적으로 수집하지 않습니다.</p>
 
-    <h2>10. 변경</h2>
+    <h2>12. 변경</h2>
     <p>이 방침이 바뀌면 이 페이지에 시행일과 함께 게시합니다.</p>
 
-    <h2>11. 문의</h2>
+    <h2>13. 문의</h2>
     <p>운영: HANDOFF 팀<br />
     이메일: <a href="mailto:haeun9634@naver.com">haeun9634@naver.com</a><br />
     GitHub: <a href="https://github.com/scoopAI-C3/C3_frontend/issues">github.com/scoopAI-C3/C3_frontend/issues</a></p>
@@ -123,7 +139,8 @@
     <div class="box">
       <strong>Summary</strong>
       <ul>
-        <li>We <strong>do not collect the content</strong> of your prompts or AI responses. We only use when an event happened and what kind of event it was.</li>
+        <li>By default we <strong>do not read the content</strong> of your prompts or AI responses. We only use when an event happened and what kind of event it was.</li>
+        <li><strong>Only if you consent and turn on "Detailed analysis"</strong>, prompt text within the scope you choose is read and classified by request type in your browser. The text is never stored or sent anywhere.</li>
         <li>Records are stored <strong>only in your browser</strong>. There is no server keeping user records.</li>
         <li>We do not collect your name, email or account information. There is no sign-in.</li>
         <li>We do not sell your information or use it for advertising.</li>
@@ -136,25 +153,36 @@
     <table>
       <tr><th>Item</th><th>Details</th></tr>
       <tr><td>Interaction events</td><td>Event type (prompt submitted, AI response started or ended, page opened or closed) and its timestamp</td></tr>
-      <tr><td>AI service used</td><td>Which of ChatGPT, Claude, Gemini or Copilot the event occurred on</td></tr>
+      <tr><td>AI service used</td><td>Which of ChatGPT, Claude or Gemini the event occurred on</td></tr>
       <tr><td>Analysis results</td><td>The collaboration style and metrics calculated in your browser from the items above (up to the 20 most recent sessions)</td></tr>
-      <tr><td>Settings</td><td>Monitoring on/off, language</td></tr>
+      <tr><td>Detailed analysis results (only if turned on)</td><td>The request type of each prompt (do / opinion / check / revise / info / other), its length, and the length of AI answers. No text is included.</td></tr>
+      <tr><td>Settings</td><td>Monitoring on/off, language, and the time and scope of your detailed-analysis consent</td></tr>
     </table>
 
-    <h2>2. Information we do not collect</h2>
+    <h2>2. Detailed analysis (optional)</h2>
+    <p>Detailed analysis works only after you turn it on in the popup and give consent. The consent screen shows the following and lets you choose a scope.</p>
     <ul>
-      <li>The text or attachments of your prompts and AI responses</li>
+      <li><strong>What it reads</strong>: the text of prompts you send and the length of AI answers</li>
+      <li><strong>What it does</strong>: classifies each prompt by request type in your browser, and checks whether long answers were skipped within seconds</li>
+      <li><strong>What it doesn't do</strong>: it doesn't store prompt text (discarded right after classification) and doesn't send text to any server or AI</li>
+      <li><strong>Scope</strong>: this conversation only, today only (off at midnight), or until you turn it off. With "this conversation only", nothing is read in other conversations.</li>
+      <li><strong>Indicator and turning off</strong>: while it's on, an indicator shows at the top right of the AI site; you can turn it off there or in the popup at any time.</li>
+    </ul>
+
+    <h2>3. Information we do not collect</h2>
+    <ul>
+      <li>The text or attachments of your prompts and AI responses (even with detailed analysis on, text is never stored or sent)</li>
       <li>Your name, email, or account information, cookies or passwords for any AI service</li>
-      <li>Browsing history outside the four supported sites. The extension runs only on <code>chatgpt.com</code>, <code>claude.ai</code>, <code>gemini.google.com</code> and <code>copilot.microsoft.com</code>.</li>
+      <li>Browsing history outside the three supported sites. The extension runs only on <code>chatgpt.com</code>, <code>claude.ai</code> and <code>gemini.google.com</code>.</li>
       <li>Your survey answers. The survey is scored entirely in your browser.</li>
       <li>Any ID that identifies you or your device. None is created or transmitted.</li>
     </ul>
 
-    <h2>3. How we use information</h2>
+    <h2>4. How we use information</h2>
     <p>The information is used only to show you your collaboration style analysis, dashboard and report.</p>
 
-    <h2>4. Information sent outside your browser</h2>
-    <p>Only one thing leaves your browser. When you click "View Collaboration Style", <strong>aggregated numbers</strong> (prompt count, average interval, refinement count, number of decision segments, levels and per-style scores) and your language setting are sent through the HANDOFF analysis function (Vercel) to <strong>OpenAI</strong> to generate the insight sentences in your report.</p>
+    <h2>5. Information sent outside your browser</h2>
+    <p>Only one thing leaves your browser. When you click "View Collaboration Style", <strong>aggregated numbers</strong> (prompt count, average interval, refinement count, number of decision segments, levels, per-style scores, and counts per request type if detailed analysis is on) and your language setting are sent through the HANDOFF analysis function (Vercel) to <strong>OpenAI</strong> to generate the insight sentences in your report.</p>
     <ul>
       <li>Prompt content, individual event timestamps, the sites you used and identifiers are not sent.</li>
       <li>The analysis function does not store the numbers it receives. Your IP address may appear temporarily in the function's and the hosting provider's (Vercel) access logs for rate limiting.</li>
@@ -162,31 +190,35 @@
     </ul>
     <p>We do not otherwise sell or transfer information to third parties, and we do not use it for advertising or creditworthiness purposes.</p>
 
-    <h2>5. Share links</h2>
+    <h2>6. Website visit statistics</h2>
+    <p>The web page (handofff.vercel.app) uses <strong>Vercel Web Analytics</strong> to count visitors, page views and referrers. It works without cookies and does not identify individuals, and the analysis result inside share links is never sent. This applies only to the web page, not to the extension.</p>
+
+    <h2>7. Share links</h2>
     <p>When you choose "Share", your analysis result is compressed and placed <strong>inside the link itself</strong>. It is not stored on a server. Anyone who receives the link can view that result, so choose who you share it with. The link stops opening 24 hours after it is created.</p>
 
-    <h2>6. Retention and deletion</h2>
+    <h2>8. Retention and deletion</h2>
     <ul>
       <li>All records are stored in your browser and are deleted when you remove the extension.</li>
       <li>Because no user records are kept on a server, no separate deletion request is needed.</li>
     </ul>
 
-    <h2>7. Your choices</h2>
+    <h2>9. Your choices</h2>
     <ul>
       <li>Turning off the <strong>Monitoring</strong> switch in the popup stops event recording.</li>
+      <li>Detailed analysis is off by default, and you can turn it off at any time from the popup or the on-page indicator.</li>
       <li>Removing the extension stops all collection.</li>
     </ul>
 
-    <h2>8. Chrome Web Store User Data Policy</h2>
+    <h2>10. Chrome Web Store User Data Policy</h2>
     <p>HANDOFF complies with the Chrome Web Store User Data Policy, including the Limited Use requirements. Information is used only for the single purpose described in this policy.</p>
 
-    <h2>9. Children</h2>
+    <h2>11. Children</h2>
     <p>The Service is not directed to children under 14 and does not knowingly collect their information.</p>
 
-    <h2>10. Changes</h2>
+    <h2>12. Changes</h2>
     <p>If this policy changes, the updated version will be posted on this page with a new effective date.</p>
 
-    <h2>11. Contact</h2>
+    <h2>13. Contact</h2>
     <p>Operated by: the HANDOFF team<br />
     Email: <a href="mailto:haeun9634@naver.com">haeun9634@naver.com</a><br />
     GitHub: <a href="https://github.com/scoopAI-C3/C3_frontend/issues">github.com/scoopAI-C3/C3_frontend/issues</a></p>

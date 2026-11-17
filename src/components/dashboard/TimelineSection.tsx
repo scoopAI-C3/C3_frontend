@@ -10,6 +10,8 @@ interface TimelineSectionProps {
   dailyTimeline: DailyTimeline;
   relativeStyles: Record<string, number>;
   aiToolUsage: Record<string, number>;
+  /** 상세 분석으로 요청 유형이 기록된 질문 수 */
+  detailPrompts?: number;
 }
 
 const TOOL_COLORS = ["#6C47B5", "#8F57FF", "#362F45"];
@@ -100,10 +102,11 @@ const TimelineChart = ({ events }: TimelineChartProps) => {
             >
               {isTop && (
                 <div className="flex flex-col items-center mb-2" style={{ marginTop: "-60px" }}>
-                  <span className="text-xs font-medium mb-1" style={{ color }}>
+                  <span className="text-xs font-medium" style={{ color }}>
                     {event.start}
                   </span>
-                  <div className="w-0.5 h-10" style={{ backgroundColor: color }} />
+                  <span className="mb-1 max-w-[140px] text-center text-[11px] leading-tight text-white/70">{event.label}</span>
+                  <div className="w-0.5 h-8" style={{ backgroundColor: color }} />
                 </div>
               )}
 
@@ -134,16 +137,18 @@ const TimelineChart = ({ events }: TimelineChartProps) => {
                       {event.start} - {event.end}
                     </div>
                     <div className="text-sm text-white/90">{event.label}</div>
+                    {event.summary && <div className="mt-1 text-xs text-white/55">{event.summary}</div>}
                   </div>
                 )}
               </div>
 
               {!isTop && (
                 <div className="flex flex-col items-center mt-2" style={{ marginBottom: "-60px" }}>
-                  <div className="w-0.5 h-10" style={{ backgroundColor: color }} />
+                  <div className="w-0.5 h-8" style={{ backgroundColor: color }} />
                   <span className="text-xs font-medium mt-1" style={{ color }}>
                     {event.start}
                   </span>
+                  <span className="max-w-[140px] text-center text-[11px] leading-tight text-white/70">{event.label}</span>
                 </div>
               )}
             </div>
@@ -154,10 +159,28 @@ const TimelineChart = ({ events }: TimelineChartProps) => {
   );
 };
 
+const STYLE_SHORT: Record<string, Record<string, string>> = {
+  ko: { 'AI-Driven Executor': '실행형', 'AI-Assisted Thinker': '사고형', 'AI Checker': '검증형', 'Balanced Collaborator': '균형형' },
+  en: { 'AI-Driven Executor': 'executor', 'AI-Assisted Thinker': 'thinker', 'AI Checker': 'checker', 'Balanced Collaborator': 'balanced' },
+};
+
+const TOOL_NAMES: Record<string, string> = { chatgpt: 'ChatGPT', claude: 'Claude', gemini: 'Gemini', copilot: 'Copilot' };
+
+/** 결과 ID가 'day-YYYY-MM-DD'면 그날 기준 제목, 오늘이면 "오늘의 흐름" */
+const flowTitle = (resultId: string, language: string): string => {
+  const match = /^day-(\d{4})-(\d{2})-(\d{2})$/.exec(resultId);
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  if (!match || `${match[1]}-${match[2]}-${match[3]}` === today) return language === 'ko' ? '오늘의 흐름' : "Today's flow";
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  return language === 'ko' ? `${month}월 ${day}일의 흐름` : `Flow on ${month}/${day}`;
+};
+
 const BAR_COLOR = "#643E83";      
 const BAR_BG_COLOR = "#211F26";    
 
-const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage }: TimelineSectionProps) => {
+const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage, detailPrompts = 0 }: TimelineSectionProps) => {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const [isSharing, setIsSharing] = useState(false);
@@ -210,27 +233,55 @@ const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage
         <ScrollReveal animation="fadeUp" delay={0} className="w-full">
           <div className="flex flex-col bg-white/5 font-[Inter] px-7 py-6 w-full rounded-lg">
             <div className="flex flex-row items-center w-full">
-              <h2 className="text-2xl font-normal mr-5 text-white">Daily TimeLine</h2>
-              <p className="text-white/50 text-xs font-normal leading-5">
+              <h2 className="text-2xl font-semibold mr-5 text-white">{flowTitle(sessionId, language)}</h2>
+              <p className="text-white/60 text-sm font-normal leading-5">
                 {language === 'ko'
-                  ? `오늘 당신은 총 ${dailyTimeline.decisionCount}번의 결정을 AI와 함께했습니다.`
-                  : `Today, you made ${dailyTimeline.decisionCount} decisions with AI.`}
+                  ? `AI와 주고받은 구간 ${dailyTimeline.decisionCount}개`
+                  : `${dailyTimeline.decisionCount} segments with AI`}
               </p>
             </div>
+            <p className="mt-2 text-white/45 text-xs leading-relaxed">
+              {detailPrompts > 0
+                ? (language === 'ko'
+                  ? `질문을 주고받은 구간마다 어떤 흐름이었는지 보여 줍니다. 상세 분석을 켠 동안 보낸 질문 ${detailPrompts}개는 요청 유형까지 함께 표시됩니다.`
+                  : `Shows what each back-and-forth with AI looked like. The ${detailPrompts} prompts sent with detailed analysis on also show their request type.`)
+                : (language === 'ko'
+                  ? '질문을 주고받은 구간마다 어떤 흐름이었는지 보여 줍니다. 무엇을 물었는지는 보지 않고 시간 흐름으로만 판단합니다. 상세 분석을 켜면 요청 유형도 함께 표시됩니다.'
+                  : 'Shows what each back-and-forth with AI looked like, judged from timing only, not content. Turn on detailed analysis to also see request types.')}
+            </p>
             {dailyTimeline.events.length > 0 && (
-              <TimelineChart events={dailyTimeline.events} />
+              <>
+                <TimelineChart events={dailyTimeline.events} />
+                <ul className="mt-2 grid gap-2">
+                  {dailyTimeline.events.map((event, idx) => (
+                    <li key={idx} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-md bg-black/20 px-4 py-2.5">
+                      <span className="w-12 shrink-0 text-sm font-semibold" style={{ color: TIMELINE_COLORS[idx % TIMELINE_COLORS.length] }}>{event.start}</span>
+                      <span className="text-sm text-white">{event.label}</span>
+                      {event.summary && <span className="text-xs text-white/50">{event.summary}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </div>
 
           <div className="flex flex-row w-full mt-6 gap-4">
             <div className="flex flex-col bg-white/5 font-[Inter] px-7 py-6 w-full rounded-lg">
-              <h2 className="text-2xl font-normal mb-6 text-white">Relative Other Styles</h2>
+              <h2 className="text-2xl font-semibold text-white">{language === 'ko' ? '스타일별 점수' : 'Score by style'}</h2>
+              <p className="mt-1 mb-5 text-white/45 text-xs leading-relaxed">
+                {language === 'ko'
+                  ? '내 행동이 네 가지 스타일과 각각 얼마나 닮았는지입니다. 합하면 100%이고, 가장 높은 것이 내 스타일입니다.'
+                  : 'How closely your behavior matches each of the four styles. They add up to 100%; the highest is your style.'}
+              </p>
               <div className="flex flex-col gap-3">
                 {Object.entries(relativeStyles)
-                  .filter(([, value]) => value > 0)
-                  .map(([style, value]) => (
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([style, value], rank) => (
                     <div key={style} className="flex items-center gap-4">
-                      <span className="text-white/70 text-sm w-40 shrink-0">{style}</span>
+                      <span className={`text-sm w-44 shrink-0 ${rank === 0 ? 'text-white font-semibold' : 'text-white/70'}`}>
+                        {style}
+                        <span className="ml-1.5 text-xs text-white/40">{STYLE_SHORT[language][style] ?? ''}</span>
+                      </span>
                       
                       <div 
                         className="flex-1 h-8 overflow-hidden rounded-sm"
@@ -240,17 +291,21 @@ const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage
                           className="h-full transition-all duration-500 rounded-sm"
                           style={{
                             width: `${value * 100}%`,
-                            backgroundColor: BAR_COLOR, 
+                            backgroundColor: rank === 0 ? '#A36EFF' : BAR_COLOR,
                           }}
                         />
                       </div>
+                      <span className="w-10 shrink-0 text-right text-sm text-white/70">{Math.round(value * 100)}%</span>
                     </div>
                   ))}
               </div>
             </div>
 
             <div className="flex flex-col bg-white/5 font-[Inter] px-7 py-6 w-full rounded-lg">
-              <h2 className="text-2xl font-normal text-white mb-4">AI Tool Usage</h2>
+              <h2 className="text-2xl font-semibold text-white">{language === 'ko' ? 'AI 도구별 사용 비율' : 'Usage by AI tool'}</h2>
+              <p className="mt-1 mb-4 text-white/45 text-xs leading-relaxed">
+                {language === 'ko' ? '기록된 질문과 답변이 어느 사이트에서 나왔는지입니다.' : 'Which site your recorded prompts and answers came from.'}
+              </p>
               <div className="flex flex-row items-center justify-between h-full pl-2 pr-4">
                 <div className="flex flex-col gap-4">
                   {toolEntries.map(([tool, value], index) => (
@@ -260,7 +315,7 @@ const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage
                         style={{ backgroundColor: TOOL_COLORS[index % TOOL_COLORS.length] }}
                       />
                       <div className="flex flex-col">
-                        <span className="text-white text-sm font-medium">{tool}</span>
+                        <span className="text-white text-sm font-medium">{TOOL_NAMES[tool] ?? tool}</span>
                         <span className="text-white/50 text-xs">{Math.round(value * 100)}%</span>
                       </div>
                     </div>
@@ -285,7 +340,7 @@ const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage
               disabled={isSharing}
               className="w-80 h-28 bg-gradient-to-r from-fuchsia-400 to-purple-500 rounded-3xl text-xl font-semibold leading-10 cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-50 text-white"
             >
-              {isSharing ? "Creating Link..." : "Share"}
+              {isSharing ? (language === 'ko' ? '링크 만드는 중…' : 'Creating link…') : (language === 'ko' ? '결과 공유하기' : 'Share result')}
             </button>
             <button
               onClick={() => {

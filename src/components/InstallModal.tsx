@@ -5,7 +5,6 @@ const AI_SITES = [
   { name: "ChatGPT", url: "https://chat.openai.com", color: "#10A37F" },
   { name: "Claude", url: "https://claude.ai", color: "#D97706" },
   { name: "Gemini", url: "https://gemini.google.com", color: "#4285F4" },
-  { name: "Copilot", url: "https://copilot.microsoft.com", color: "#9333EA" },
 ];
 
 

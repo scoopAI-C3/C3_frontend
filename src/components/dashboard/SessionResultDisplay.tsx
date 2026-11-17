@@ -58,6 +58,7 @@ const SessionResultDisplay = ({ data, isFromSurvey = false }: SessionResultDispl
             dailyTimeline={data.dailyTimeline}
             relativeStyles={data.relativeStyles}
             aiToolUsage={data.aiToolUsage}
+            detailPrompts={data.detailPrompts ?? 0}
           />
         )}
 
@@ -69,7 +70,7 @@ const SessionResultDisplay = ({ data, isFromSurvey = false }: SessionResultDispl
                 onClick={handleShare}
                 className="w-80 h-28 bg-gradient-to-r from-fuchsia-400 to-purple-500 rounded-3xl text-xl font-semibold leading-10 cursor-pointer hover:opacity-90 transition-opacity text-white"
               >
-                Share
+                {language === 'ko' ? '결과 공유하기' : 'Share result'}
               </button>
               <button
                 onClick={() => navigate('/landing')}

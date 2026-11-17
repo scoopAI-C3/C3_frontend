@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SessionResultDisplay from "../components/dashboard/SessionResultDisplay";
-import { getSessionResult } from "../apis/session";
+import { analyzeLatestDay, getSessionResult } from "../apis/session";
+import EmptyResult from "../components/dashboard/EmptyResult";
 import type { SessionResultData, SurveyResultData } from "../types/session";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -11,6 +12,7 @@ const Dashboard = () => {
   const [surveyResult, setSurveyResult] = useState<SurveyResultData | null>(null);
   const [isFromSurvey, setIsFromSurvey] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [empty, setEmpty] = useState(false);
 
   useEffect(() => {
     const fetchResult = async () => {
@@ -30,32 +32,30 @@ const Dashboard = () => {
           }
         }
 
-        // 먼저 localStorage에서 sharedSessionId 확인 (공유 페이지에서 온 경우)
-        const sharedSessionId = localStorage.getItem("sharedSessionId");
-        if (sharedSessionId) {
-          const response = await getSessionResult(sharedSessionId, language);
-          if (response.isSuccess) {
-            setSessionResult(response.result);
+        const isExtension = typeof chrome !== "undefined" && !!chrome.storage?.local;
+
+        // 웹(공유 링크로 들어온 경우): 공유받은 결과를 보여 준다
+        if (!isExtension) {
+          const sharedSessionId = localStorage.getItem("sharedSessionId");
+          if (sharedSessionId) {
+            const response = await getSessionResult(sharedSessionId, language);
+            if (response.isSuccess) setSessionResult(response.result);
           }
           setLoading(false);
           return;
         }
 
-        // 웹 환경인지 확인
-        if (typeof chrome === "undefined" || !chrome.storage || !chrome.storage.local) {
-          console.log("Web environment detected: Skipping chrome.storage access.");
-          setLoading(false);
+        // 확장 프로그램: 열 때마다 오늘(가장 최근에 질문한 날)의 기록으로 다시 분석해서 바로 보여 준다
+        const resultId = await analyzeLatestDay(language);
+        if (!resultId) {
+          setEmpty(true);
           return;
         }
-
-        const data = (await chrome.storage.local.get([
-          "sessionId",
-        ])) as { sessionId?: string };
-        if (data.sessionId) {
-          const response = await getSessionResult(data.sessionId, language);
-          if (response.isSuccess) {
-            setSessionResult(response.result);
-          }
+        const response = await getSessionResult(resultId, language);
+        if (response.isSuccess && (response.result.totalPrompts ?? 0) > 0) {
+          setSessionResult(response.result);
+        } else {
+          setEmpty(true);
         }
       } catch (error) {
         console.error("Failed to fetch result:", error);
@@ -90,8 +90,8 @@ const Dashboard = () => {
   }
 
   // 세션 결과인 경우
-  if (!sessionResult) {
-    return <div className="bg-[#211F26] w-screen h-screen" />;
+  if (!sessionResult || empty) {
+    return <EmptyResult />;
   }
 
   return <SessionResultDisplay data={sessionResult} isSharedView={false} />;

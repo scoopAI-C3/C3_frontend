@@ -1,12 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { AgentEvent, AgentStatusType, RiskType, DisplayEvent } from "../types/agent";
 import { PRIVACY_URL } from "../constants/links";
+import DetailModeCard from "./DetailModeCard";
+import { useLanguage } from "../contexts/LanguageContext";
 
 function AgentControlCard() {
   const [isMonitoring, setIsMonitoring] = useState(true);
   const [agentStatus, setAgentStatus] = useState<AgentStatusType>("Inactive");
   const [decisionRisk, setDecisionRisk] = useState<RiskType>("Low");
   const [recentEvents, setRecentEvents] = useState<DisplayEvent[]>([]);
+  const [consentView, setConsentView] = useState(false);
+  const { language } = useLanguage();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // 동의 화면을 열고 닫을 때 맨 위부터 보이게
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [consentView]);
 
   // 모니터링 토글 핸들러
   const handleMonitoringToggle = async () => {
@@ -114,7 +124,9 @@ function AgentControlCard() {
   };
   const statusStyle = getStatusStyle(agentStatus);
   return (
-    <div className="flex flex-col w-[360px] h-[500px] bg-[#211F26] p-10 gap-5 font-[Inter] overflow-y-auto scrollbar-hide">
+    <div ref={scrollRef} className={`flex flex-col w-[360px] h-[500px] bg-[#211F26] gap-5 font-[Inter] overflow-y-auto scrollbar-hide ${consentView ? "p-6" : "p-10"}`}>
+      {!consentView && (
+      <>
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl border-2 border-[#A36EFF] bg-[#2B2930] flex items-center justify-center">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -128,7 +140,7 @@ function AgentControlCard() {
             </defs>
           </svg>
         </div>
-        <h1 className="text-xl font-semibold text-white">선택적 AI 활용</h1>
+        <h1 className="text-xl font-semibold text-white">HANDOFF</h1>
       </div>
 
       <div className="bg-[#2B2930] rounded-2xl p-5">
@@ -166,6 +178,13 @@ function AgentControlCard() {
         </div>
       </div>
 
+      </>
+      )}
+
+      <DetailModeCard onConsentViewChange={setConsentView} />
+
+      {!consentView && (
+      <>
       <div>
         <h2 className="text-xs font-semibold text-white tracking-wider mb-4">
           RECENT EVENTS
@@ -188,9 +207,9 @@ function AgentControlCard() {
 
       <button
         className="w-full mt-auto py-3 text-sm text-[#A36EFF] hover:text-[#FF7DFD] font-medium hover:bg-white/5 rounded-lg transition-colors"
-        onClick={() => chrome.tabs.create({ url: chrome.runtime.getURL('index.html#/landing') })}
+        onClick={() => chrome.tabs.create({ url: chrome.runtime.getURL('index.html#/dashboard') })}
       >
-        Open Full Dashboard →
+        {language === 'ko' ? '내 결과 보기 →' : 'View my result →'}
       </button>
       <a
         href={PRIVACY_URL}
@@ -200,6 +219,8 @@ function AgentControlCard() {
       >
         Privacy Policy
       </a>
+      </>
+      )}
     </div>
   );
 }

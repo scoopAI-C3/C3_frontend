@@ -46,6 +46,8 @@
 /* 기본 폰트 설정 */
 body {
   font-family: "NanumSquareRound", "Inter", sans-serif;
+  /* w-screen 섹션이 세로 스크롤바 폭만큼 넘쳐 가로 스크롤이 생기는 것을 막는다 */
+  overflow-x: hidden;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
