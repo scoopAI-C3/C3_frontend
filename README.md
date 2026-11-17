@@ -56,10 +56,13 @@ HANDOFF는 AI 사용을 점이 아니라 **흐름**으로 봅니다. 질문이 �
     <td colspan="2"><img src="docs/images/data.png" alt="데이터 요약"><br><sub><b>데이터 요약</b> · AI 사용 빈도, 질문 간 평균 간격, 수정·재질문 비율, 결정 구간 빈도</sub></td>
   </tr>
   <tr>
-    <td colspan="2"><img src="docs/images/usage.png" alt="스타일 비교와 도구별 사용 비율"><br><sub><b>스타일 비교 · 도구별 사용 비율</b></sub></td>
+    <td colspan="2"><img src="docs/images/flow.png" alt="오늘의 흐름"><br><sub><b>오늘의 흐름</b> · 대화마다 바로 다시 물었는지, 충분히 생각하고 물었는지</sub></td>
   </tr>
   <tr>
-    <td colspan="2"><img src="docs/images/report.png" alt="분석 리포트"><br><sub><b>분석 리포트</b> · 패턴 점수, AI 인사이트, 단계별 분석 흐름</sub></td>
+    <td colspan="2"><img src="docs/images/usage.png" alt="스타일별 점수와 도구별 사용 비율"><br><sub><b>스타일별 점수 · AI 도구별 사용 비율</b></sub></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="docs/images/report.png" alt="분석 리포트"><br><sub><b>분석 리포트</b> · 대화 깊이, 생각 시간, 바로 다시 묻기, AI가 정리한 인사이트</sub></td>
   </tr>
   <tr>
     <td colspan="2"><img src="docs/images/survey.png" alt="설문"><br><sub><b>설문</b> · 확장 프로그램 없이 10문항으로 진단</sub></td>
