@@ -32,11 +32,11 @@
 
 한국어:
 
-> AI와 어떻게 협업하는지 분석해 드립니다. ChatGPT·Claude·Gemini·Copilot 대화의 내용이 아닌 시점만 사용합니다.
+> AI와 어떻게 협업하는지 분석해 드립니다. 기본은 대화 내용 없이 시점만, 동의하면 질문 유형까지 분석합니다.
 
 English (매니페스트 `description` 과 동일):
 
-> See how you collaborate with AI. Uses only the timing of your chats on ChatGPT, Claude, Gemini and Copilot, never the content.
+> See how you collaborate with AI on ChatGPT, Claude, Gemini and Copilot. Timing-based; reads prompts only if you opt in.
 
 ### 상세 설명 — 한국어
 
@@ -62,8 +62,14 @@ HANDOFF는 ChatGPT, Claude, Gemini, Copilot을 쓰는 방식을 분석해 나의
 · 24시간 동안 유효한 결과 공유 링크 (결과가 링크 안에 담기며 서버에 저장되지 않음)
 · 확장 프로그램 사용 기록 없이도 해 볼 수 있는 10문항 설문
 
+■ 상세 분석 (선택)
+동의한 사람만 켤 수 있습니다. 지금 이 대화만, 30분, 1시간, 오늘 하루 중 범위를 고르면
+그 안에서 보낸 질문을 실행·의견·검증·수정·정보 요청으로 분류해 결과가 더 정확해집니다.
+질문 텍스트는 브라우저 안에서 분류한 뒤 바로 버리며, 저장하거나 보내지 않습니다.
+켜져 있는 동안 AI 사이트 오른쪽 아래에 표시가 보이고, 거기서 바로 끌 수 있습니다.
+
 ■ 개인정보
-· 프롬프트와 AI 응답의 내용은 수집하지 않습니다. 시점과 이벤트 종류만 사용합니다.
+· 기본 분석은 프롬프트와 AI 응답의 내용을 읽지 않습니다. 시점과 이벤트 종류만 사용합니다.
 · 기록은 브라우저 안에만 저장됩니다. 사용자 기록을 보관하는 서버가 없습니다.
 · 로그인이 없고 이름·이메일·계정 정보를 수집하지 않습니다.
 · 지원하는 4개 사이트에서만 동작합니다.
@@ -96,8 +102,14 @@ HANDOFF analyzes the way you work with ChatGPT, Claude, Gemini and Copilot and s
 · A share link for your results, valid for 24 hours (the result lives inside the link, not on a server)
 · A 10-question survey you can take without any usage history
 
+■ Detailed analysis (optional)
+Only people who consent can turn it on. Choose a scope (this conversation, 30 minutes, 1 hour or today),
+and prompts sent within it are classified as do / opinion / check / revise / info requests for a more precise result.
+Prompt text is classified in your browser and discarded right away; it is never stored or sent.
+While it's on, an indicator shows at the bottom right of the AI site, where you can turn it off.
+
 ■ Privacy
-· The content of your prompts and AI responses is never collected. Only timing and event type are used.
+· By default, the content of your prompts and AI responses is never read. Only timing and event type are used.
 · Your records stay in your browser. There is no server keeping user records.
 · No sign-in. No name, email or account information is collected.
 · Runs only on the four supported sites.
@@ -131,7 +143,11 @@ Used for a single one-minute idle timer. When the user has stopped prompting for
 **호스트 권한 (content script: chatgpt.com, claude.ai, gemini.google.com, copilot.microsoft.com)**
 
 ```
-The content script runs only on these four AI chat sites. It observes DOM changes to detect three moments: when the user submits a prompt, when the AI response starts, and when it ends. It records only the event type and timestamp. It does not read, store or transmit the text of prompts or responses, and it does not modify the page. The recorded events stay in the browser.
+The content script runs only on these four AI chat sites. By default it observes DOM changes to detect three moments: when the user submits a prompt, when the AI response starts, and when it ends, and records only the event type and timestamp.
+
+Optional "Detailed analysis": only after the user opens a consent screen in the popup, reads what is accessed, checks an explicit consent box and chooses a scope (this conversation only, 30 minutes, 1 hour or today), the content script reads the text of prompts the user sends within that scope and classifies each one into a request type (do / opinion / check / revise / info) inside the browser. The text is discarded immediately after classification and is never stored or transmitted; only the type label and character counts are kept locally. A visible indicator is shown on the page while it is active and lets the user turn it off. The scope expires automatically.
+
+The content script never modifies the page content (apart from the indicator) and all records stay in the browser.
 ```
 
 **원격 코드 (Remote code)**: **아니요, 원격 코드를 사용하지 않습니다.** 모든 스크립트가 패키지에 포함되어 있습니다.
@@ -140,11 +156,12 @@ The content script runs only on these four AI chat sites. It observes DOM change
 
 체크할 것:
 
-- [x] **사용자 활동 (User activity)** — 프롬프트를 보낸 시점과 응답 시작·종료 시점을 기록하고, 사용자가 분석을 요청하면 그 **집계 수치**(횟수, 평균 간격, 등급, 점수)를 LLM 문장 생성을 위해 전송합니다.
+- [x] **사용자 활동 (User activity)** — 프롬프트를 보낸 시점과 응답 시작·종료 시점을 기록하고, 사용자가 분석을 요청하면 그 **집계 수치**(횟수, 평균 간격, 등급, 점수, 상세 분석을 켠 경우 요청 유형별 개수)를 LLM 문장 생성을 위해 전송합니다.
+- [x] **웹사이트 콘텐츠 (Website content)** — 상세 분석을 켠 경우에만 질문 텍스트를 읽습니다. 텍스트는 기기 밖으로 나가지 않으므로 엄밀히는 "수집"이 아닐 수 있지만, 읽는 것 자체를 숨기지 않기 위해 체크하는 쪽을 권합니다. 신고를 덜 하는 것보다 더 하는 쪽이 반려 위험이 낮습니다.
 
-체크하지 않는 것: 개인 식별 정보, 건강 정보, 금융 및 결제 정보, 인증 정보, 개인 커뮤니케이션, 위치, 웹 기록, 웹사이트 콘텐츠
+체크하지 않는 것: 개인 식별 정보, 건강 정보, 금융 및 결제 정보, 인증 정보, 개인 커뮤니케이션, 위치, 웹 기록
 
-> 심사에서 질문이 오면: 개별 이벤트와 사이트 정보는 브라우저 밖으로 나가지 않고, 식별자도 만들지 않으며, 집계 수치만 Vercel 함수를 거쳐 OpenAI로 전달되고 저장되지 않는다고 답하면 됩니다.
+> 심사에서 질문이 오면: 기본 분석은 시각만 쓰고, 상세 분석은 동의 화면(읽는 것·하지 않는 것·범위·동의 체크)을 거친 뒤에만 켜지며, 텍스트는 브라우저 안에서 분류 직후 버린다고 답하면 됩니다. 밖으로 나가는 건 집계 수치뿐이며 Vercel 함수를 거쳐 OpenAI로 전달되고 저장되지 않습니다.
 
 인증 3항목은 모두 체크:
 
@@ -178,9 +195,13 @@ No account is required.
 5. Alternatively, click "Survey" on the landing page to try the 10-question survey without any usage data.
 
 The Monitoring switch in the popup stops all collection.
+
+To test the optional Detailed analysis: open the popup while a ChatGPT/Claude/Gemini/Copilot chat is the active tab, click "Turn on", read the consent screen, check the consent box, choose a scope and click "Agree and start". An indicator appears at the bottom right of the chat page. Send a few prompts, then open the report: a "Request Types" section shows the classification. Prompt text is never stored (you can inspect chrome.storage to confirm) and can be turned off from the indicator or the popup.
 ```
 
 ## 5. 등록 후 할 일
+
+0. (Vercel 프로젝트 주인) Vercel 대시보드 → Analytics 탭에서 **Web Analytics를 켠다**. 코드는 이미 들어가 있어서 켜기만 하면 소개 페이지 방문 수, 조회 수, 유입 경로가 집계된다. 웹 스토어 대시보드의 설치 수·노출 수와 함께 보면 된다. 소개 페이지의 설치 버튼에는 `utm_source=handoff-web` 이 붙어 있어 스토어 통계에서 소개 페이지를 거쳐 온 방문을 구분할 수 있다.
 
 1. Vercel 환경 변수 `ALLOWED_ORIGINS` 를 `chrome-extension://<확장 ID>,https://handofff.vercel.app` 로 넣어, 우리 확장 프로그램과 웹에서만 LLM 함수를 호출할 수 있게 좁힌다.
 2. Vercel 환경 변수 `VITE_STORE_URL=https://chromewebstore.google.com/detail/<ID>` 를 넣고 웹을 재배포한다. 설치 안내가 GitHub 수동 설치에서 스토어 링크로 바뀐다.

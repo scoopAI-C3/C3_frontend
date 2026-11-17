@@ -12,7 +12,7 @@ import reportShot from "../assets/home/report.webp";
 import popupShot from "../assets/home/popup.webp";
 import surveyShot from "../assets/home/survey.webp";
 import LanguageToggle from "../components/LanguageToggle";
-import HowWeMeasure from "../components/home/HowWeMeasure";
+import HowWeMeasure, { DetailAnalysis } from "../components/home/HowWeMeasure";
 import { useLanguage } from "../contexts/LanguageContext";
 import { INSTALL_URL, IS_STORE_LISTED, PRIVACY_URL } from "../constants/links";
 import { TYPE_CONTENTS } from "../local/typeContents";
@@ -36,7 +36,7 @@ const COPY = {
     eyebrow: "From Decision Boundary to Collaboration Style",
     heroTitle: ["당신은 AI와", "어떻게 협업하고 있나요?"],
     heroBody:
-      "HANDOFF는 프롬프트를 읽지 않습니다. AI를 쓰는 '행동'만으로 판단이 AI에게 넘어가는 순간을 찾아, 나의 AI 협업 스타일로 보여 줍니다.",
+      "HANDOFF는 기본적으로 프롬프트를 읽지 않습니다. AI를 쓰는 '행동'만으로 판단이 AI에게 넘어가는 순간을 찾아, 나의 AI 협업 스타일로 보여 줍니다.",
     supported: "지원",
     award: "Scoop AI Hackathon in Seoul 우수상",
     problemEyebrow: "Problem",
@@ -88,12 +88,12 @@ const COPY = {
     does: "하는 것",
     doesItems: ["AI 사이트에서의 행동 시점 기록", "행동 패턴으로 협업 스타일 분류", "스타일 카드와 타임라인으로 시각화"],
     privacyEyebrow: "Privacy-first",
-    privacyTitle: "프롬프트는 보지 않습니다",
+    privacyTitle: "내 기록은 내 브라우저에",
     privacyItems: [
-      { title: "내용 수집 없음", body: "프롬프트와 AI 응답의 텍스트는 읽지도, 저장하지도 않습니다." },
+      { title: "기본은 내용 없이", body: "기본 분석은 질문 텍스트를 읽지 않습니다. 상세 분석을 켜도 텍스트는 분류한 뒤 바로 버리고, 저장하거나 보내지 않습니다." },
       { title: "브라우저 안에만 저장", body: "기록과 분석 결과는 내 브라우저에만 있습니다. 사용자 기록을 보관하는 서버가 없습니다." },
       { title: "로그인 없음", body: "계정도 이메일도 필요 없습니다. 확장 프로그램을 지우면 기록도 함께 사라집니다." },
-      { title: "언제든 끄기", body: "팝업의 Monitoring 스위치 하나로 기록을 멈출 수 있습니다." },
+      { title: "언제든 끄기", body: "Monitoring 스위치로 기록을, 팝업이나 화면 표시로 상세 분석을 바로 멈출 수 있습니다." },
     ],
     privacyLink: "개인정보처리방침 보기",
     surveyEyebrow: "No install needed",
@@ -111,7 +111,7 @@ const COPY = {
     eyebrow: "From Decision Boundary to Collaboration Style",
     heroTitle: ["How do you", "collaborate with AI?"],
     heroBody:
-      "HANDOFF never reads your prompts. It looks only at how you use AI to find the moment a decision is handed off to AI, and shows it as your AI collaboration style.",
+      "By default, HANDOFF doesn't read your prompts. It looks only at how you use AI to find the moment a decision is handed off to AI, and shows it as your AI collaboration style.",
     supported: "Works on",
     award: "Excellence Award, Scoop AI Hackathon in Seoul",
     problemEyebrow: "Problem",
@@ -163,12 +163,12 @@ const COPY = {
     does: "What it does",
     doesItems: ["Record when things happen on AI sites", "Classify your style from behavior patterns", "Visualize it as a style card and timeline"],
     privacyEyebrow: "Privacy-first",
-    privacyTitle: "We don't look at your prompts",
+    privacyTitle: "Your records stay in your browser",
     privacyItems: [
-      { title: "No content collected", body: "The text of your prompts and AI responses is never read or stored." },
+      { title: "Content-free by default", body: "The default analysis never reads prompt text. Even with detailed analysis on, text is discarded right after classification and never stored or sent." },
       { title: "Stays in your browser", body: "Records and results live only in your browser. There is no server keeping user records." },
       { title: "No sign-in", body: "No account, no email. Remove the extension and the records go with it." },
-      { title: "Turn it off anytime", body: "One Monitoring switch in the popup stops recording." },
+      { title: "Turn it off anytime", body: "The Monitoring switch stops recording, and the popup or on-page indicator stops detailed analysis." },
     ],
     privacyLink: "Read the privacy policy",
     surveyEyebrow: "No install needed",
@@ -380,6 +380,7 @@ const HomePage = () => {
         </section>
 
         <HowWeMeasure />
+        <DetailAnalysis />
 
         {/* 작동 방식 */}
         <section id="how" className="scroll-mt-6 border-y border-white/5 bg-black/20">

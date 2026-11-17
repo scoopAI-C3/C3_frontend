@@ -1,4 +1,6 @@
 import { useLanguage } from "../../contexts/LanguageContext";
+import consentShot from "../../assets/home/consent.webp";
+import { INTENT_LABELS } from "../../local/intent";
 
 /**
  * 소개 페이지: "프롬프트를 안 보는데 어떻게 판단하나요?"에 대한 답.
@@ -46,7 +48,25 @@ const COPY = {
     },
     honestTitle: "한계도 있습니다",
     honest:
-      "내용을 보지 않으니 같은 30초가 답을 읽은 시간인지 잠깐 딴짓한 시간인지는 알 수 없습니다. 그래서 점수로 평가하지 않고, 행동에서 보이는 경향을 스타일로 보여 줍니다.",
+      "내용을 보지 않으니 같은 30초가 답을 읽은 시간인지 잠깐 딴짓한 시간인지는 알 수 없습니다. 그래서 점수로 평가하지 않고 경향을 스타일로 보여 주며, 더 정확히 알고 싶다면 아래 상세 분석을 켤 수 있습니다.",
+    detail: {
+      eyebrow: "Detailed analysis · 선택",
+      title: "동의하면, 무엇을 물었는지까지",
+      lead: "원하는 사람만 팝업에서 켤 수 있습니다. 동의 화면에서 읽는 것과 하지 않는 것을 확인하고, 범위를 직접 고릅니다.",
+      steps: [
+        { title: "동의하고 범위 선택", body: "지금 이 대화만, 30분, 1시간, 오늘 하루 중에서 고릅니다. 범위가 끝나면 저절로 꺼집니다." },
+        { title: "브라우저 안에서 분류", body: "보낸 질문을 그 자리에서 요청 유형으로 나눕니다." },
+        { title: "텍스트는 바로 버림", body: "질문 텍스트는 저장하지도, 서버나 AI로 보내지도 않습니다. 남는 건 유형과 글자 수뿐입니다." },
+      ],
+      gainsTitle: "더 보이는 것",
+      gains: [
+        "질문이 실행·의견·검증·수정·정보 중 어떤 요청이었는지",
+        "긴 답변을 몇 초 만에 넘기고 다음으로 갔는지",
+        "평균 질문 길이 (맥락을 직접 주는지, 짧게 맡기는지)",
+        "요청 유형까지 반영해 더 정확해진 스타일 판정",
+      ],
+      indicator: "켜져 있는 동안 AI 사이트 오른쪽 아래에 표시가 보이고, 거기서 바로 끌 수 있습니다.",
+    },
   },
   en: {
     eyebrow: "How we measure",
@@ -87,7 +107,25 @@ const COPY = {
     },
     honestTitle: "What it can't see",
     honest:
-      "Since we never see content, we can't tell whether 30 seconds was spent reading the answer or doing something else. That's why we show a tendency as a style instead of grading you with a score.",
+      "Since we never see content, we can't tell whether 30 seconds was spent reading the answer or doing something else. That's why we show a tendency as a style rather than a score, and you can turn on detailed analysis below for more precision.",
+    detail: {
+      eyebrow: "Detailed analysis · optional",
+      title: "With your consent, what you asked too",
+      lead: "Only people who want it turn it on in the popup. The consent screen shows what is read and what isn't, and you choose the scope.",
+      steps: [
+        { title: "Consent and choose a scope", body: "This conversation only, 30 minutes, 1 hour or today. It turns itself off when the scope ends." },
+        { title: "Classified in your browser", body: "Each prompt you send is sorted into a request type on the spot." },
+        { title: "Text is discarded", body: "Prompt text is never stored or sent to any server or AI. Only the type and length remain." },
+      ],
+      gainsTitle: "What you'll also see",
+      gains: [
+        "Whether each prompt was a do / opinion / check / revise / info request",
+        "Whether you moved on from long answers within seconds",
+        "Average prompt length (giving context yourself vs. handing it off briefly)",
+        "A more precise style that also reflects request types",
+      ],
+      indicator: "While it's on, an indicator shows at the bottom right of the AI site, and you can turn it off right there.",
+    },
   },
 };
 
@@ -249,3 +287,57 @@ const HowWeMeasure = () => {
 };
 
 export default HowWeMeasure;
+
+export const DetailAnalysis = () => {
+  const { language } = useLanguage();
+  const d = COPY[language].detail;
+  const intents = (["execute", "opinion", "verify", "revise", "info"] as const).map((key) => INTENT_LABELS[language][key]);
+
+  return (
+    <section id="detail" className="scroll-mt-6 border-y border-white/5 bg-black/20">
+      <div className="mx-auto grid max-w-6xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1.25fr_1fr] lg:items-center lg:py-24">
+        <div>
+          <p className="mb-3 font-[Inter] text-sm font-semibold tracking-wide text-[#C59BFF]">{d.eyebrow}</p>
+          <h2 className="text-2xl font-extrabold sm:text-4xl">{d.title}</h2>
+          <p className="mt-4 leading-relaxed text-white/70">{d.lead}</p>
+
+          <ol className="mt-8 grid gap-4 sm:grid-cols-3">
+            {d.steps.map((step, i) => (
+              <li key={step.title} className="rounded-2xl border border-white/10 bg-[#2B2930] p-5">
+                <span className="font-[Inter] text-sm font-bold text-[#C59BFF]">0{i + 1}</span>
+                <h3 className="mt-1.5 font-bold">{step.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-white/60">{step.body}</p>
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            {intents.map((label) => (
+              <span key={label} className="rounded-full bg-[#A36EFF]/15 px-3 py-1 text-sm text-[#E2D2FF] ring-1 ring-[#A36EFF]/40">
+                {label}
+              </span>
+            ))}
+          </div>
+
+          <h3 className="mt-8 text-sm font-semibold text-white/50">{d.gainsTitle}</h3>
+          <ul className="mt-3 grid gap-2">
+            {d.gains.map((gain) => (
+              <li key={gain} className="flex gap-2.5 text-white/85">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF7DFD]" />
+                {gain}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-6 text-sm text-white/45">{d.indicator}</p>
+        </div>
+
+        <img
+          src={consentShot}
+          alt={d.title}
+          loading="lazy"
+          className="mx-auto w-full max-w-[320px] rounded-2xl border border-[#A36EFF]/40 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.8)]"
+        />
+      </div>
+    </section>
+  );
+};
