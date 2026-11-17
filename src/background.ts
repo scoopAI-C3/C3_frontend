@@ -265,6 +265,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true
   }
 
+  // 결과 화면을 열기 직전: 아직 저장하지 않은 최신 기록을 바로 저장
+  if (message.type === 'FLUSH_SESSION') {
+    enqueue(async () => {
+      const state = await loadState()
+      await callObserveAPI(state, 'flush')
+      await saveState(state)
+    })
+      .then(() => sendResponse({ success: true }))
+      .catch((err) => sendResponse({ success: false, error: err.message }))
+    return true
+  }
+
   if (message.type === 'GET_EVENTS') {
     chrome.storage.local.get(['events', 'agentStatus', 'decisionRisk', 'activePlatform', 'activePlatforms'])
       .then((data) => sendResponse(data))

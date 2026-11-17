@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
-import { getSessionGraph } from "../apis/session";
+import { getSessionGraph, getLatestResultId } from "../apis/session";
 import type { SessionGraphData } from "../types/session";
 import reportBg from "../assets/reportBg.webp";
 import { INTENT_LABELS } from "../local/intent";
@@ -104,8 +104,7 @@ const ReportPage = () => {
 
         if (typeof chrome !== "undefined" && chrome.storage?.local) {
           // 확장 프로그램: 항상 지금 세션 (공유 링크용 값이 남아 있어도 쓰지 않는다)
-          const data = await chrome.storage.local.get(["sessionId"]) as { sessionId?: string };
-          currentSessionId = data.sessionId;
+          currentSessionId = (await getLatestResultId()) ?? undefined;
         } else {
           // 웹: 공유 링크로 받은 결과
           currentSessionId = localStorage.getItem("sharedSessionId") ?? undefined;

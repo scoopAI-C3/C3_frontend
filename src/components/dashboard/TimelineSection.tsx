@@ -166,6 +166,17 @@ const STYLE_SHORT: Record<string, Record<string, string>> = {
 
 const TOOL_NAMES: Record<string, string> = { chatgpt: 'ChatGPT', claude: 'Claude', gemini: 'Gemini', copilot: 'Copilot' };
 
+/** 결과 ID가 'day-YYYY-MM-DD'면 그날 기준 제목, 오늘이면 "오늘의 흐름" */
+const flowTitle = (resultId: string, language: string): string => {
+  const match = /^day-(\d{4})-(\d{2})-(\d{2})$/.exec(resultId);
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  if (!match || `${match[1]}-${match[2]}-${match[3]}` === today) return language === 'ko' ? '오늘의 흐름' : "Today's flow";
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  return language === 'ko' ? `${month}월 ${day}일의 흐름` : `Flow on ${month}/${day}`;
+};
+
 const BAR_COLOR = "#643E83";      
 const BAR_BG_COLOR = "#211F26";    
 
@@ -222,7 +233,7 @@ const TimelineSection = ({ sessionId, dailyTimeline, relativeStyles, aiToolUsage
         <ScrollReveal animation="fadeUp" delay={0} className="w-full">
           <div className="flex flex-col bg-white/5 font-[Inter] px-7 py-6 w-full rounded-lg">
             <div className="flex flex-row items-center w-full">
-              <h2 className="text-2xl font-semibold mr-5 text-white">{language === 'ko' ? '오늘의 흐름' : "Today's flow"}</h2>
+              <h2 className="text-2xl font-semibold mr-5 text-white">{flowTitle(sessionId, language)}</h2>
               <p className="text-white/60 text-sm font-normal leading-5">
                 {language === 'ko'
                   ? `AI와 주고받은 구간 ${dailyTimeline.decisionCount}개`

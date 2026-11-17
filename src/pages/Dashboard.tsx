@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SessionResultDisplay from "../components/dashboard/SessionResultDisplay";
-import { analyzeSession, getSessionResult } from "../apis/session";
+import { analyzeLatestDay, getSessionResult } from "../apis/session";
 import EmptyResult from "../components/dashboard/EmptyResult";
 import type { SessionResultData, SurveyResultData } from "../types/session";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -45,14 +45,13 @@ const Dashboard = () => {
           return;
         }
 
-        // 확장 프로그램: 열 때마다 지금까지의 기록으로 다시 분석해서 바로 보여 준다
-        const data = (await chrome.storage.local.get(["sessionId"])) as { sessionId?: string };
-        if (!data.sessionId) {
+        // 확장 프로그램: 열 때마다 오늘(가장 최근에 질문한 날)의 기록으로 다시 분석해서 바로 보여 준다
+        const resultId = await analyzeLatestDay(language);
+        if (!resultId) {
           setEmpty(true);
           return;
         }
-        await analyzeSession({ sessionId: data.sessionId, language });
-        const response = await getSessionResult(data.sessionId, language);
+        const response = await getSessionResult(resultId, language);
         if (response.isSuccess && (response.result.totalPrompts ?? 0) > 0) {
           setSessionResult(response.result);
         } else {

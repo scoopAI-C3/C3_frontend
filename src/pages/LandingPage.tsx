@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import TextLogo from "../assets/TextLogo.png";
 import Logo from "../assets/appLogo.png";
 import Arrow from "../assets/arrow-right.svg";
-import { analyzeSession } from "../apis/session";
 import { useNavigate } from "react-router-dom";
 import LanguageToggle from "../components/LanguageToggle";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -43,16 +42,8 @@ const LandingPage = () => {
     }
 
     try {
-      const data = (await chrome.storage.local.get(["sessionId"])) as {
-        sessionId?: string;
-      };
-      if (data.sessionId) {
-        await analyzeSession({ sessionId: data.sessionId, language });
-        navigate("/dashboard");
-      } else {
-        // sessionId가 없으면 AI 사이트로 이동 안내
-        setShowInstallModal(true);
-      }
+      // 결과 화면이 열릴 때 오늘 기록으로 분석한다
+      navigate("/dashboard");
     } catch {
       // chrome API 접근 실패 시 설치 모달 표시
       setShowInstallModal(true);

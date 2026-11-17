@@ -19,7 +19,7 @@ import type {
 } from '../types/agent'
 import { analyze, classifyBatch, toGraph, toResult, toSurveyResult, type ObserveBatch } from '../local/analyze'
 import { fetchLlmInsights } from '../local/insights'
-import { loadRecord, newSessionId, saveRecord } from '../local/store'
+import { listRecords, loadRecord, newSessionId, saveRecord } from '../local/store'
 import { styleFromTypeCode, toLang, type TypeCode } from '../local/texts'
 
 function ok<T>(result: T): ApiResponse<T> {
@@ -91,6 +91,61 @@ export const analyzeSession = async (request: SessionAnalyzeRequest): Promise<Ap
   await saveRecord(record)
 
   return ok({ sessionId: record.sessionId, status: 'ANALYZED', message: 'OK' })
+}
+
+const RESULT_ID_KEY = 'resultId'
+
+function localDay(time: number): string {
+  const d = new Date(time)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/**
+ * 결과 화면용: 세션이 아니라 "하루" 단위로 분석한다.
+ * 확장 프로그램을 새로고침하거나 브라우저를 다시 켜면 세션이 새로 시작되므로,
+ * 저장된 모든 세션의 기록을 합쳐 가장 최근에 질문한 날(보통 오늘)의 기록만 분석한다.
+ * 결과는 'day-YYYY-MM-DD' 기록으로 저장하고, 그 ID를 돌려준다. 기록이 없으면 null.
+ */
+export const analyzeLatestDay = async (language?: string): Promise<string | null> => {
+  // 아직 저장하지 않은 최신 기록부터 저장
+  await chrome.runtime.sendMessage({ type: 'FLUSH_SESSION' }).catch(() => undefined)
+
+  const records = (await listRecords()).filter((record) => !record.sessionId.startsWith('day-'))
+  const seen = new Set<string>()
+  const items = records.flatMap((record) => record.timeline).filter((item) => {
+    const key = `${item.type}|${item.timestamp}|${item.domain}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+  const promptTimes = items.filter((item) => item.type === 'PROMPT_SUBMIT').map((item) => Date.parse(item.timestamp)).filter((t) => !Number.isNaN(t))
+  if (promptTimes.length === 0) return null
+
+  const day = localDay(Math.max(...promptTimes))
+  const dayItems = items.filter((item) => localDay(Date.parse(item.timestamp)) === day)
+  const lang = toLang(language)
+  const analysis = analyze(dayItems, [])
+  const insights = await fetchLlmInsights(analysis, lang)
+
+  const id = `day-${day}`
+  const now = new Date().toISOString()
+  await saveRecord({
+    sessionId: id,
+    startedAt: now,
+    timeline: [],
+    batches: [],
+    analysis,
+    analyzedAt: now,
+    llmInsights: insights ? { [lang]: insights } : {},
+  })
+  await chrome.storage.local.set({ [RESULT_ID_KEY]: id })
+  return id
+}
+
+/** 가장 최근에 분석한 결과 ID (없으면 null) */
+export const getLatestResultId = async (): Promise<string | null> => {
+  const data = (await chrome.storage.local.get(RESULT_ID_KEY)) as { resultId?: string }
+  return data.resultId ?? null
 }
 
 export const getSessionResult = async (sessionId: string, language?: string): Promise<ApiResponse<SessionResultData>> => {
