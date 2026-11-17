@@ -282,165 +282,169 @@ function triggerUserMessage() {
   sendEvent({ type: 'PROMPT_SUBMIT', message: `User sent message #${userMessageCount}`, detail: promptDetail() })
 }
 
+/**
+ * 말풍선마다 바뀌지 않는 식별값.
+ *
+ * 말풍선 "개수"로 전송을 감지하면 안 된다:
+ *  - ChatGPT는 긴 대화에서 화면 밖 말풍선을 지웠다가 스크롤하면 다시 그린다(하나 추가 + 하나 삭제 = 개수 그대로).
+ *  - 다른 대화로 이동하면 개수가 늘어 질문을 안 보냈는데도 질문으로 센다.
+ * 그래서 말풍선마다 식별값을 기억하고, "맨 끝에 처음 보는 말풍선"이 생겼을 때만 질문으로 센다.
+ *
+ * 식별값은 사이트가 말풍선마다 붙여 둔 속성을 쓰되, 실제로 말풍선마다 값이 다를 때만 쓴다.
+ * 없으면 텍스트 + 같은 텍스트 중 몇 번째인지로 대신한다.
+ */
+const STABLE_KEY_ATTRS = ['data-content-search-unit-key', 'data-message-id']
+
+function messageKeys(bubbles: Element[]): (string | null)[] {
+  const attrValues = (attr: string) => bubbles.map((el) => el.closest(`[${attr}]`)?.getAttribute(attr) ?? null)
+  for (const attr of STABLE_KEY_ATTRS) {
+    const values = attrValues(attr)
+    const unique = values.every((v) => v !== null) && new Set(values).size === values.length
+    if (bubbles.length > 0 && unique) return values.map((v) => `${attr}:${v}`)
+  }
+  const textCount = new Map<string, number>()
+  return bubbles.map((el) => {
+    const text = el.textContent?.trim() ?? ''
+    if (!text) return null // 아직 내용이 채워지지 않음: 다음 변경 때 다시 본다
+    const n = (textCount.get(text) ?? 0) + 1
+    textCount.set(text, n)
+    return `text:${n}:${text.slice(0, 300)}`
+  })
+}
+
 // 사용자 메시지 전송 감지
 function setupMessageDetection() {
   if (!selectors) return
 
-  const debugUserSelectors = () => {
-    const selectorList = selectors.userMessage.split(', ')
-    selectorList.forEach(sel => {
-      try {
-        const matches = document.querySelectorAll(sel)
-        if (matches.length > 0) {
-          console.log(`[HANDOFF] User selector matched: "${sel}" (${matches.length} elements)`)
-        }
-      } catch {
-        // invalid selector
-      }
-    })
-  }
-  debugUserSelectors()
+  const seen = new Set<string>()
+  let lastPath = location.pathname
+  /** 이 시각 전까지는 새로 보이는 말풍선을 "이미 있던 대화"로 보고 세지 않는다 */
+  let baselineUntil = Date.now() + 1500
+  /** 사용자가 Enter나 전송 버튼을 누른 시각 */
+  let sendIntentAt = 0
+  const SEND_WINDOW_MS = 4000
+  /** 마지막으로 질문으로 센 말풍선 */
+  let lastCounted: { el: Element; text: string; at: number } | null = null
 
-  let lastUserMessageCount = document.querySelectorAll(selectors.userMessage).length
-  console.log(`[HANDOFF] Initial user message count: ${lastUserMessageCount}`)
-
-  const userMessageObserver = new MutationObserver(() => {
-    const currentCount = document.querySelectorAll(selectors.userMessage).length
-    if (currentCount > lastUserMessageCount) {
-      console.log(`[HANDOFF] User message count changed: ${lastUserMessageCount} -> ${currentCount}`)
-      triggerUserMessage()
-      lastUserMessageCount = currentCount
+  const scan = () => {
+    const now = Date.now()
+    const sentRecently = now - sendIntentAt < SEND_WINDOW_MS
+    if (location.pathname !== lastPath) {
+      lastPath = location.pathname
+      // 질문을 보내서 주소가 바뀐 게 아니라면(다른 대화로 이동) 그 대화의 기존 말풍선은 세지 않는다
+      if (!sentRecently) baselineUntil = now + 2500
     }
-  })
 
-  userMessageObserver.observe(document.body, {
-    childList: true,
-    subtree: true
-  })
+    const bubbles = Array.from(document.querySelectorAll(selectors.userMessage))
+    const keys = messageKeys(bubbles)
+    let foundNew = false
+    let newestIsNew = false
+    keys.forEach((key, index) => {
+      if (!key || seen.has(key)) return
+      seen.add(key)
+      foundNew = true
+      if (index === bubbles.length - 1) newestIsNew = true
+    })
+
+    const inBaseline = now < baselineUntil && !sentRecently
+    if (inBaseline) {
+      // 대화 내용이 아직 불러와지는 중이면 기다리는 시간을 늘린다
+      if (foundNew) baselineUntil = Math.max(baselineUntil, now + 1500)
+      return
+    }
+    if (!newestIsNew) return
+
+    // ChatGPT는 보낸 질문을 임시 말풍선으로 먼저 그렸다가, 서버가 받으면 식별값이 바뀐 말풍선으로 교체한다.
+    // 방금 센 말풍선이 교체된 것이면(같은 내용이 10초 안에 다시 나타남) 새 질문으로 세지 않는다.
+    const newest = bubbles[bubbles.length - 1]
+    const text = newest.textContent?.trim() ?? ''
+    const prev = lastCounted
+    const replaced = !!prev && now - prev.at < 10_000 &&
+      (prev.el === newest || !prev.el.isConnected) &&
+      (prev.text === text || !prev.text || !text)
+    lastCounted = { el: newest, text, at: now }
+    if (!replaced) triggerUserMessage()
+  }
+
+  // 변경이 몰려도(답변 스트리밍 등) 0.2초에 한 번만 검사
+  let scheduled = false
+  const scheduleScan = () => {
+    if (scheduled) return
+    scheduled = true
+    setTimeout(() => {
+      scheduled = false
+      scan()
+    }, 200)
+  }
+
+  scan() // 처음 화면에 이미 있는 말풍선을 기억 (세지 않음)
+  new MutationObserver(scheduleScan).observe(document.body, { childList: true, subtree: true, characterData: true })
+
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.isComposing) {
       const active = document.activeElement
       if (active?.tagName === 'TEXTAREA' ||
           (active as HTMLElement)?.getAttribute?.('contenteditable') === 'true' ||
           active?.closest('[contenteditable="true"]') ||
           active?.closest('rich-textarea') || // Gemini uses rich-textarea
           active?.closest('[role="textbox"]')) {
-        console.log('[HANDOFF] Enter key detected in input area')
         captureDraft(active)
-        setTimeout(() => {
-          const newCount = document.querySelectorAll(selectors.userMessage).length
-          if (newCount > lastUserMessageCount) {
-            triggerUserMessage()
-            lastUserMessageCount = newCount
-          }
-        }, 1000)
+        sendIntentAt = Date.now()
+        setTimeout(scan, 1000)
       }
     }
-  })
+  }, true)
 
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement
-    if (target.closest('button[aria-label*="Send"], button[aria-label*="submit"], button[data-testid*="send"], [class*="send-button"], [class*="submit"]')) {
-      console.log('[HANDOFF] Send button clicked')
+    if (target.closest('button[aria-label*="Send"], button[aria-label*="submit"], button[data-testid*="send"], [class*="send-button"], [class*="submit"], [data-testid="chat-input-send"]')) {
       captureDraft(findComposer())
-      setTimeout(() => {
-        const newCount = document.querySelectorAll(selectors.userMessage).length
-        if (newCount > lastUserMessageCount) {
-          triggerUserMessage()
-          lastUserMessageCount = newCount
-        }
-      }, 1000)
+      sendIntentAt = Date.now()
+      setTimeout(scan, 1000)
     }
-  })
+  }, true)
 }
 
-// AI 응답 감지
+// AI 응답 감지: 사이트의 "생성 중" 표시만 본다.
+// (답변 말풍선 개수는 대화 이동·스크롤에도 바뀌어 잘못 감지되므로 쓰지 않는다)
 function setupResponseDetection() {
   if (!selectors) return
 
-  let lastAssistantCount = document.querySelectorAll(selectors.assistantMessage).length
-  console.log(`[HANDOFF] Initial assistant message count: ${lastAssistantCount}`)
-
-  const debugSelectors = () => {
-    const selectorList = selectors.streamingIndicator.split(', ')
-    selectorList.forEach(sel => {
-      const match = document.querySelector(sel)
-      if (match) {
-        console.log(`[HANDOFF] Matched streaming selector: ${sel}`, match)
-      }
-    })
-  }
-
-  const observer = new MutationObserver(() => {
-    const streamingElement = document.querySelector(selectors.streamingIndicator)
-    const currentAssistantCount = document.querySelectorAll(selectors.assistantMessage).length
-
-    // AI 응답 시작 감지
+  const check = () => {
+    const streaming = !!document.querySelector(selectors.streamingIndicator)
     const now = Date.now()
-    if (!isAiResponding && (streamingElement || currentAssistantCount > lastAssistantCount)) {
-      if (now - lastAiResponseStartTime < AI_EVENT_DEBOUNCE) {
-        return
-      }
+
+    if (!isAiResponding && streaming) {
+      if (now - lastAiResponseStartTime < AI_EVENT_DEBOUNCE) return
       isAiResponding = true
       lastAiResponseStartTime = now
-      lastAssistantCount = currentAssistantCount
-      console.log(`[HANDOFF] Streaming detected:`, streamingElement ? 'by indicator' : 'by message count')
-      debugSelectors()
       sendEvent({ type: 'AI_RESPONSE_START', message: 'AI started responding' })
+      return
     }
 
-    // AI 응답 종료 감지
-    if (isAiResponding && !streamingElement) {
+    if (isAiResponding && !streaming) {
+      // 표시가 잠깐 사라졌다 다시 생기는 경우를 거르기 위해 1초 뒤 한 번 더 확인
       setTimeout(() => {
-        const stillStreaming = document.querySelector(selectors.streamingIndicator)
-        const checkTime = Date.now()
-        if (!stillStreaming && isAiResponding) {
-          if (checkTime - lastAiResponseEndTime < AI_EVENT_DEBOUNCE) {
-            return
-          }
-          isAiResponding = false
-          lastAiResponseEndTime = checkTime
-          lastAssistantCount = document.querySelectorAll(selectors.assistantMessage).length
-          sendEvent({ type: 'AI_RESPONSE_END', message: 'AI finished responding', detail: responseDetail() })
-        }
+        if (!isAiResponding || document.querySelector(selectors.streamingIndicator)) return
+        const end = Date.now()
+        if (end - lastAiResponseEndTime < AI_EVENT_DEBOUNCE) return
+        isAiResponding = false
+        lastAiResponseEndTime = end
+        sendEvent({ type: 'AI_RESPONSE_END', message: 'AI finished responding', detail: responseDetail() })
       }, 1000)
     }
-  })
+  }
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    characterData: true,
-    attributes: true
-  })
-
-  setInterval(() => {
-    const streamingElement = document.querySelector(selectors.streamingIndicator)
-    const now = Date.now()
-
-    if (!isAiResponding && streamingElement) {
-      // 중복 방지
-      if (now - lastAiResponseStartTime < AI_EVENT_DEBOUNCE) {
-        return
-      }
-      isAiResponding = true
-      lastAiResponseStartTime = now
-      console.log('[HANDOFF] Polling detected streaming start')
-      debugSelectors()
-      sendEvent({ type: 'AI_RESPONSE_START', message: 'AI started responding' })
-    }
-
-    if (isAiResponding && !streamingElement) {
-      // 중복 방지
-      if (now - lastAiResponseEndTime < AI_EVENT_DEBOUNCE) {
-        return
-      }
-      isAiResponding = false
-      lastAiResponseEndTime = now
-      console.log('[HANDOFF] Polling detected streaming end')
-      sendEvent({ type: 'AI_RESPONSE_END', message: 'AI finished responding', detail: responseDetail() })
-    }
-  }, 2000)
+  let scheduled = false
+  new MutationObserver(() => {
+    if (scheduled) return
+    scheduled = true
+    setTimeout(() => {
+      scheduled = false
+      check()
+    }, 200)
+  }).observe(document.body, { childList: true, subtree: true, attributes: true })
+  setInterval(check, 2000)
 }
 
 if (platform) {
