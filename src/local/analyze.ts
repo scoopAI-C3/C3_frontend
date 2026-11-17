@@ -17,8 +17,10 @@
  *  - 의사결정 이벤트 수는 대시보드 타임라인에 표시되는 구간 수와 같은 값을 쓴다
  *    (서버에서는 항상 0으로 집계되던 값).
  */
+import { INTENTS, INTENT_STYLE_WEIGHTS, type Intent } from './intent'
 import type {
   DataSummary,
+  DetailSummary,
   GraphMetrics,
   GraphPatterns,
   InteractionTimelineItem,
@@ -66,6 +68,13 @@ const PROTOTYPES: Record<StyleName, { speed: number; depth: number }> = {
 /** 기준점에서 멀어질수록 점수가 줄어드는 폭 */
 const SPREAD = 0.3
 
+/** 상세 분석: 요청 유형 점수를 시간 기반 점수와 섞는 최대 비율 (분류된 질문이 10개 이상일 때) */
+const MAX_INTENT_WEIGHT = 0.5
+const FULL_INTENT_PROMPTS = 10
+/** 이 길이 이상 답변을 SKIM_SEC 안에 넘기면 "읽지 않고 넘김"으로 센다 */
+const LONG_ANSWER_CHARS = 1500
+const SKIM_SEC = 5
+
 export const GRAPH_NODES = [
   'extract_metrics',
   'analyze_patterns',
@@ -91,6 +100,8 @@ export interface Analysis {
   style: StyleName
   /** 스타일을 정한 두 축 (0~1) */
   axes?: { speed: number; depth: number }
+  /** 상세 분석 결과 (동의하고 기록한 질문이 있을 때만) */
+  detail?: DetailSummary
   relativeStyles: Record<StyleName, number>
   levels: {
     prompt: Level3
@@ -151,6 +162,14 @@ export function analyze(timeline: InteractionTimelineItem[], batches: ObserveBat
       .sort((a, b) => a - b)
   const promptTimes = times('PROMPT_SUBMIT')
   const responseEnds = times('AI_RESPONSE_END')
+  const responseLengthAt = new Map<number, number>()
+  for (const item of timeline) {
+    if (item.type === 'AI_RESPONSE_END' && typeof item.responseLength === 'number') {
+      responseLengthAt.set(Date.parse(item.timestamp), item.responseLength)
+    }
+  }
+  let longAnswers = 0
+  let skimmedAnswers = 0
 
   const totalPrompts = promptTimes.length
   let episodes = totalPrompts > 0 ? 1 : 0
@@ -169,7 +188,13 @@ export function analyze(timeline: InteractionTimelineItem[], batches: ObserveBat
       episodes++
       continue
     }
-    thinkTimes.push((current - (lastEnd ?? previous)) / 1000)
+    const thinkSec = (current - (lastEnd ?? previous)) / 1000
+    thinkTimes.push(thinkSec)
+    const answerLength = lastEnd !== null ? responseLengthAt.get(lastEnd) : undefined
+    if (answerLength !== undefined && answerLength >= LONG_ANSWER_CHARS) {
+      longAnswers++
+      if (thinkSec < SKIM_SEC) skimmedAnswers++
+    }
   }
 
   const avgInterval = thinkTimes.length > 0 ? round2(thinkTimes.reduce((a, b) => a + b, 0) / thinkTimes.length) : 0
@@ -219,8 +244,38 @@ export function analyze(timeline: InteractionTimelineItem[], batches: ObserveBat
   }
   const total = STYLE_NAMES.reduce((sum, name) => sum + scores[name], 0)
   for (const name of STYLE_NAMES) {
-    scores[name] = total > 0 ? round2(scores[name] / total) : 0.25
+    scores[name] = total > 0 ? scores[name] / total : 0.25
   }
+
+  // 3-1. 상세 분석: 요청 유형이 가리키는 스타일 점수를 섞는다
+  const intentCounts = Object.fromEntries([...INTENTS, 'other'].map((intent) => [intent, 0])) as Record<Intent, number>
+  const promptLengths: number[] = []
+  for (const item of timeline) {
+    if (item.type !== 'PROMPT_SUBMIT' || !item.intent) continue
+    intentCounts[item.intent] = (intentCounts[item.intent] ?? 0) + 1
+    if (typeof item.length === 'number') promptLengths.push(item.length)
+  }
+  const detailPrompts = Object.values(intentCounts).reduce((a, b) => a + b, 0)
+  const classified = detailPrompts - intentCounts.other
+  if (classified > 0) {
+    const intentScores = Object.fromEntries(STYLE_NAMES.map((name) => [name, 0])) as Record<StyleName, number>
+    for (const intent of INTENTS) {
+      for (const [name, weight] of Object.entries(INTENT_STYLE_WEIGHTS[intent])) {
+        intentScores[name as StyleName] += (weight ?? 0) * intentCounts[intent]
+      }
+    }
+    const weight = MAX_INTENT_WEIGHT * Math.min(1, classified / FULL_INTENT_PROMPTS)
+    for (const name of STYLE_NAMES) {
+      scores[name] = (1 - weight) * scores[name] + weight * (intentScores[name] / classified)
+    }
+  }
+  for (const name of STYLE_NAMES) scores[name] = round2(scores[name])
+  if (promptLengths.length > 0) {
+    metrics.avgPromptLength = round2(promptLengths.reduce((a, b) => a + b, 0) / promptLengths.length)
+  }
+  const detail: DetailSummary | undefined = detailPrompts > 0
+    ? { prompts: detailPrompts, intents: intentCounts, avgPromptLength: metrics.avgPromptLength, skimmedAnswers, longAnswers }
+    : undefined
 
   // 5. 스타일 결정: 점수가 가장 높은 스타일 (동점이면 앞 순서)
   let style: StyleName = STYLE_NAMES[0]
@@ -246,6 +301,7 @@ export function analyze(timeline: InteractionTimelineItem[], batches: ObserveBat
   return {
     style,
     axes: { speed: round2(speed), depth: round2(depth) },
+    detail,
     relativeStyles: scores,
     levels: { prompt, interval, refinement, decision },
     metrics,
@@ -328,6 +384,12 @@ function patternInsights(analysis: Analysis, lang: Lang): string[] {
   if (interval === 'short') insights.push(text.intervalShort)
   else if (interval === 'long') insights.push(text.intervalLong)
   if (refinement === 'high') insights.push(text.refinementHigh)
+  const detail = analysis.detail
+  if (detail && detail.prompts >= 3) {
+    const top = INTENTS.reduce((best, intent) => (detail.intents[intent] > detail.intents[best] ? intent : best), INTENTS[0])
+    if (detail.intents[top] > 0) insights.push(text.topIntent[top](Math.round((detail.intents[top] / detail.prompts) * 100)))
+    if (detail.skimmedAnswers > 0) insights.push(text.skimmed(detail.skimmedAnswers, detail.longAnswers))
+  }
   if (insights.length === 0) insights.push(text.balanced)
   return insights
 }
@@ -364,6 +426,7 @@ export function toGraph(
     patterns: patterns(analysis, lang),
     llmInsights: llmInsights && llmInsights.length > 0 ? llmInsights : fallbackInsights(analysis, lang),
     patternInsights: patternInsights(analysis, lang),
+    detail: analysis.detail,
   }
 }
 

@@ -17,6 +17,10 @@ type Lang = 'ko' | 'en'
 const LEVEL3 = ['high', 'medium', 'low'] as const
 const INTERVAL_LEVELS = ['short', 'medium', 'long'] as const
 const STYLES = ['AI-Driven Executor', 'AI-Assisted Thinker', 'AI Checker', 'Balanced Collaborator'] as const
+const INTENTS = ['execute', 'opinion', 'verify', 'revise', 'info', 'other'] as const
+const INTENT_TEXT: Record<(typeof INTENTS)[number], string> = {
+  execute: '실행 요청', opinion: '의견·사고', verify: '검증 요청', revise: '수정 요청', info: '정보 질문', other: '기타',
+}
 
 interface InsightsInput {
   language: Lang
@@ -27,6 +31,8 @@ interface InsightsInput {
     refinement: (typeof LEVEL3)[number]
   }
   scores: Record<(typeof STYLES)[number], number>
+  /** 상세 분석을 켠 사용자만: 요청 유형별 개수 */
+  intents?: Record<(typeof INTENTS)[number], number>
 }
 
 export interface HandlerRequest {
@@ -102,7 +108,7 @@ function isCount(value: unknown, max: number): value is number {
 
 function parseInput(body: unknown): InsightsInput | null {
   if (!body || typeof body !== 'object') return null
-  const { language, metrics, levels, scores } = body as Record<string, unknown>
+  const { language, metrics, levels, scores, intents } = body as Record<string, unknown>
   if (language !== 'ko' && language !== 'en') return null
 
   const m = metrics as Record<string, unknown> | undefined
@@ -118,6 +124,13 @@ function parseInput(body: unknown): InsightsInput | null {
   const s = scores as Record<string, unknown> | undefined
   if (!s || !STYLES.every((style) => isCount(s[style], 1))) return null
 
+  let parsedIntents: InsightsInput['intents']
+  if (intents !== undefined) {
+    const i = intents as Record<string, unknown> | null
+    if (!i || typeof i !== 'object' || !INTENTS.every((intent) => isCount(i[intent] ?? 0, 100_000))) return null
+    parsedIntents = Object.fromEntries(INTENTS.map((intent) => [intent, Math.round(Number(i[intent] ?? 0))])) as InsightsInput['intents']
+  }
+
   return {
     language,
     metrics: {
@@ -128,6 +141,7 @@ function parseInput(body: unknown): InsightsInput | null {
     },
     levels: { prompt: l.prompt, interval: l.interval, refinement: l.refinement } as InsightsInput['levels'],
     scores: Object.fromEntries(STYLES.map((style) => [style, s[style]])) as InsightsInput['scores'],
+    ...(parsedIntents ? { intents: parsedIntents } : {}),
   }
 }
 
@@ -142,6 +156,9 @@ const PATTERN_TEXT = {
 function buildPrompt(input: InsightsInput): string {
   const { metrics, levels, scores } = input
   const scoreLines = STYLES.map((style) => `- ${style}: ${scores[style]}`).join('\n')
+  const intentLines = input.intents
+    ? `\n\n요청 유형 (사용자가 동의한 상세 분석, 개수):\n${INTENTS.map((intent) => `- ${INTENT_TEXT[intent]}: ${input.intents?.[intent] ?? 0}`).join('\n')}`
+    : ''
   const languageRule = input.language === 'en'
     ? 'Write the three insights in English.'
     : '인사이트 3개는 한국어로 작성해주세요.'
@@ -160,7 +177,7 @@ function buildPrompt(input: InsightsInput): string {
 - 수정 패턴: ${PATTERN_TEXT.refinement[levels.refinement]}
 
 행동 점수:
-${scoreLines}
+${scoreLines}${intentLines}
 
 사용자에게 직접 말하듯 각 인사이트를 한 문장으로 써주세요. ${languageRule}
 3가지 핵심 인사이트를 JSON 형식으로 제공해주세요:

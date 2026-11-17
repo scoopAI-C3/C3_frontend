@@ -1,3 +1,5 @@
+import type { Intent } from '../local/intent'
+
 export interface ApiResponse<T> {
   isSuccess: boolean
   code: string
@@ -133,6 +135,10 @@ export interface InteractionTimelineItem {
   type: string
   domain: string
   timestamp: string
+  /** 상세 분석이 켜져 있을 때만 있음 (텍스트 없이 분류 결과와 길이만) */
+  intent?: Intent
+  length?: number
+  responseLength?: number
 }
 
 export interface SessionObserveRequest {
@@ -185,7 +191,18 @@ export interface GraphPatterns {
   refinement: PatternDetail
 }
 
+/** 상세 분석 결과 (상세 분석으로 기록된 질문이 있을 때만) */
+export interface DetailSummary {
+  prompts: number
+  intents: Record<Intent, number>
+  avgPromptLength: number
+  /** 긴 답변(1,500자 이상)을 5초 안에 넘기고 다음 질문을 보낸 횟수 */
+  skimmedAnswers: number
+  longAnswers: number
+}
+
 export interface SessionGraphData {
+  detail?: DetailSummary
   sessionId: string
   graphExecution: GraphExecution
   metrics: GraphMetrics

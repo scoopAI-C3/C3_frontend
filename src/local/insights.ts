@@ -19,6 +19,8 @@ export interface InsightsRequest {
   }
   levels: Analysis['levels']
   scores: Analysis['relativeStyles']
+  /** 상세 분석을 켠 경우에만: 요청 유형별 개수 (텍스트 없음) */
+  intents?: Record<string, number>
 }
 
 export function buildInsightsRequest(analysis: Analysis, language: Lang): InsightsRequest {
@@ -28,6 +30,7 @@ export function buildInsightsRequest(analysis: Analysis, language: Lang): Insigh
     metrics: { totalPrompts, avgInterval, refinementLoops, decisionBoundaries },
     levels: analysis.levels,
     scores: analysis.relativeStyles,
+    ...(analysis.detail ? { intents: analysis.detail.intents } : {}),
   }
 }
 

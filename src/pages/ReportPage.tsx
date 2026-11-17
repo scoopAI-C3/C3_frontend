@@ -4,6 +4,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { getSessionGraph } from "../apis/session";
 import type { SessionGraphData } from "../types/session";
 import reportBg from "../assets/reportBg.webp";
+import { INTENT_LABELS } from "../local/intent";
 import { useLanguage } from "../contexts/LanguageContext";
 
 const nodeNameMapKo: Record<string, string> = {
@@ -301,6 +302,61 @@ const ReportPage = () => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="rounded-2xl p-6 mb-6" style={{ background: 'rgba(45,40,50,0.9)', border: '1px solid rgba(186,128,255,0.25)' }}>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-white text-xl font-semibold">{language === 'ko' ? '요청 유형' : 'Request Types'}</h2>
+                <span className="text-xs text-[#D9C2FF] rounded-md px-2 py-1" style={{ background: 'rgba(163,110,255,0.2)' }}>
+                  {language === 'ko' ? '상세 분석' : 'Detailed analysis'}
+                </span>
+              </div>
+              {graphData?.detail && graphData.detail.prompts > 0 ? (
+                <>
+                  <div className="space-y-3">
+                    {(['execute', 'opinion', 'verify', 'revise', 'info', 'other'] as const).map((intent) => {
+                      const count = graphData.detail?.intents[intent] ?? 0;
+                      const ratio = count / (graphData.detail?.prompts || 1);
+                      return (
+                        <div key={intent}>
+                          <div className="flex justify-between mb-1.5 text-sm">
+                            <span className="text-white/75">{INTENT_LABELS[language][intent]}</span>
+                            <span className="text-white">{count}{language === 'ko' ? '건' : ''} · {Math.round(ratio * 100)}%</span>
+                          </div>
+                          <div className="h-[7px] rounded-full bg-white/5 overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${ratio * 100}%`, background: 'linear-gradient(90deg, #E822E5 0%, #7C3BEC 100%)' }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 mt-6 text-center">
+                    <div className="rounded-xl py-3" style={{ background: 'rgba(50,45,55,0.8)' }}>
+                      <p className="text-white text-lg font-semibold">{graphData.detail.prompts}</p>
+                      <p className="text-white/50 text-xs mt-1">{language === 'ko' ? '분석한 질문' : 'Prompts analyzed'}</p>
+                    </div>
+                    <div className="rounded-xl py-3" style={{ background: 'rgba(50,45,55,0.8)' }}>
+                      <p className="text-white text-lg font-semibold">{Math.round(graphData.detail.avgPromptLength)}{language === 'ko' ? '자' : ''}</p>
+                      <p className="text-white/50 text-xs mt-1">{language === 'ko' ? '평균 질문 길이' : 'Avg. prompt length'}</p>
+                    </div>
+                    <div className="rounded-xl py-3" style={{ background: 'rgba(50,45,55,0.8)' }}>
+                      <p className="text-white text-lg font-semibold">{graphData.detail.skimmedAnswers}/{graphData.detail.longAnswers}</p>
+                      <p className="text-white/50 text-xs mt-1">{language === 'ko' ? '5초 안에 넘긴 긴 답변' : 'Long answers skipped <5s'}</p>
+                    </div>
+                  </div>
+                  <p className="text-white/35 text-xs mt-4">
+                    {language === 'ko'
+                      ? '질문 텍스트는 분류한 뒤 버리고, 유형과 글자 수만 남깁니다.'
+                      : 'Prompt text is discarded after classification; only the type and length are kept.'}
+                  </p>
+                </>
+              ) : (
+                <p className="text-white/50 text-sm leading-relaxed">
+                  {language === 'ko'
+                    ? '팝업에서 상세 분석을 켜면 질문이 실행·의견·검증·수정·정보 중 어떤 요청이었는지까지 분석해 결과가 더 정확해집니다.'
+                    : 'Turn on detailed analysis in the popup to see whether each prompt was a do / opinion / check / revise / info request, for a more precise result.'}
+                </p>
+              )}
             </div>
 
             <div

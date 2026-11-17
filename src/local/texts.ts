@@ -110,6 +110,14 @@ export const PATTERN_INSIGHT_TEXT = {
     intervalLong: '신중한 상호작용: 깊은 사고 후 AI 활용',
     refinementHigh: '반복적 수정: AI와의 협력적 사고 과정',
     balanced: '균형 잡힌 상호작용 패턴을 보이고 있습니다.',
+    topIntent: {
+      execute: (pct: number) => `요청의 ${pct}%가 실행 요청: 결과물을 AI에게 맡기는 편`,
+      opinion: (pct: number) => `요청의 ${pct}%가 의견·사고: AI를 생각의 상대로 쓰는 편`,
+      verify: (pct: number) => `요청의 ${pct}%가 검증 요청: 내 판단을 AI로 확인하는 편`,
+      revise: (pct: number) => `요청의 ${pct}%가 수정 요청: 결과를 계속 다듬어 가는 편`,
+      info: (pct: number) => `요청의 ${pct}%가 정보 질문: AI를 검색처럼 쓰는 편`,
+    },
+    skimmed: (skimmed: number, total: number) => `긴 답변 ${total}개 중 ${skimmed}개는 5초 안에 다음 질문으로 넘어감`,
   },
   en: {
     promptHigh: 'High AI usage frequency: Active AI dependency pattern',
@@ -118,8 +126,16 @@ export const PATTERN_INSIGHT_TEXT = {
     intervalLong: 'Careful interaction: AI utilization after deep thinking',
     refinementHigh: 'Iterative refinement: Collaborative thinking process with AI',
     balanced: 'Showing a balanced interaction pattern.',
+    topIntent: {
+      execute: (pct: number) => `${pct}% of requests ask AI to do it: you hand over the output`,
+      opinion: (pct: number) => `${pct}% of requests ask for opinions: you use AI as a thinking partner`,
+      verify: (pct: number) => `${pct}% of requests ask to check: you verify your own judgment with AI`,
+      revise: (pct: number) => `${pct}% of requests ask for revisions: you keep refining the result`,
+      info: (pct: number) => `${pct}% of requests ask for information: you use AI like search`,
+    },
+    skimmed: (skimmed: number, total: number) => `Moved on within 5 seconds after ${skimmed} of ${total} long answers`,
   },
-} satisfies Record<Lang, Record<string, string>>
+}
 
 /** LLM을 쓸 수 없을 때 대신 보여 주는 규칙 기반 인사이트 */
 export const FALLBACK_INSIGHT_TEXT = {

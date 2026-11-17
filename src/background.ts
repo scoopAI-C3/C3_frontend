@@ -155,7 +155,11 @@ async function handleEvent(event: AgentEvent) {
     state.interactionTimeline.push({
       type: event.type,
       domain: event.platform,
-      timestamp: new Date(event.timestamp).toISOString()
+      timestamp: new Date(event.timestamp).toISOString(),
+      // 상세 분석이 켜져 있을 때만: 요청 유형과 글자 수 (텍스트 없음)
+      ...(event.detail?.intent ? { intent: event.detail.intent } : {}),
+      ...(typeof event.detail?.length === 'number' ? { length: event.detail.length } : {}),
+      ...(typeof event.detail?.responseLength === 'number' ? { responseLength: event.detail.responseLength } : {}),
     })
   }
 
