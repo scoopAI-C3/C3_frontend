@@ -9,7 +9,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 const COPY = {
   ko: {
     eyebrow: "How we measure",
-    title: "내용을 안 보는데, 어떻게 알아요?",
+    title: "그럼 무엇으로 판단하나요?",
     lead: "무엇을 물었는지가 아니라 언제 물었는지를 봅니다. HANDOFF가 기록하는 건 아래 세 개의 시각뿐입니다.",
     timeline: {
       sent: "질문 보냄",
@@ -50,7 +50,7 @@ const COPY = {
   },
   en: {
     eyebrow: "How we measure",
-    title: "If you don't read my prompts, how can you tell?",
+    title: "So what does it look at?",
     lead: "We look at when you asked, not what you asked. HANDOFF records only the three moments below.",
     timeline: {
       sent: "Prompt sent",
@@ -98,25 +98,28 @@ const STYLE_POINTS = [
   { name: "AI Checker", x: 50, y: 84, color: "#A78BFA" },
 ];
 
-function TimelineVertical({ t }: { t: (typeof COPY)["ko"]["timeline"] }) {
-  const Point = ({ label }: { label: string }) => (
+function TimelinePoint({ label }: { label: string }) {
+  return (
     <li className="flex items-center gap-3">
       <span className="h-3.5 w-3.5 shrink-0 rounded-full bg-[#A36EFF] ring-4 ring-[#2B2930]" />
       <span className="font-bold">{label}</span>
     </li>
   )
+}
+
+function TimelineVertical({ t }: { t: (typeof COPY)["ko"]["timeline"] }) {
   return (
     <ol className="relative grid gap-3 pl-1 sm:hidden">
       <span aria-hidden="true" className="absolute top-2 bottom-2 left-[11px] w-px bg-white/15" />
-      <Point label={t.sent} />
+      <TimelinePoint label={t.sent} />
       <li className="ml-7 rounded-lg border border-dashed border-white/20 px-3 py-2 text-sm text-white/45">
         {t.writing} · {t.writingNote}
       </li>
-      <Point label={t.done} />
+      <TimelinePoint label={t.done} />
       <li className="ml-7 rounded-lg border border-[#FF7DFD] bg-[#FF7DFD]/15 px-3 py-2 text-sm font-bold text-[#FFD3FE]">
         ⏱ {t.thinking}
       </li>
-      <Point label={t.next} />
+      <TimelinePoint label={t.next} />
     </ol>
   )
 }

@@ -53,7 +53,7 @@ const COPY = {
       "질문이 더 이상 이어지지 않고, AI의 답변이 그대로 행동으로 이어지는 순간. 이 지점에서 판단은 사용자에게서 AI로 넘어갑니다.",
     signalsTitle: "어떻게 포착하나요",
     signals: ["답변 후 다음 질문까지의 생각 시간", "답변 직후 다시 묻기 (수정·재질문)", "한 번에 이어 묻는 횟수", "대화를 마치는 시점"],
-    measureLink: "프롬프트 없이 어떻게 알까요?",
+    measureLink: "그럼 무엇으로 판단하나요?",
     howEyebrow: "How it works",
     howTitle: "설치하고, 평소처럼 쓰면 됩니다",
     steps: [
@@ -128,7 +128,7 @@ const COPY = {
       "The moment questions stop and the AI's answer turns straight into action. At that point, the decision moves from you to AI.",
     signalsTitle: "How we detect it",
     signals: ["Think time between an answer and your next prompt", "Re-asking right after an answer", "How many prompts you send in a row", "When a conversation ends"],
-    measureLink: "How can it tell without prompts?",
+    measureLink: "So what does it look at?",
     howEyebrow: "How it works",
     howTitle: "Install it and use AI as usual",
     steps: [
@@ -183,6 +183,16 @@ const COPY = {
 
 const SITES = ["ChatGPT", "Claude", "Gemini", "Copilot"];
 
+/**
+ * 같은 페이지 안 섹션으로 이동.
+ * 이 앱은 주소의 # 뒤를 화면 경로로 쓰는(HashRouter) 구조라, 일반 #앵커 링크를 쓰면
+ * 없는 경로로 이동해 빈 화면이 된다. 그래서 주소를 바꾸지 않고 스크롤만 한다.
+ */
+const scrollToSection = (id: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
+  event.preventDefault();
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
 const gradientText = "bg-gradient-to-r from-[#FF7DFD] to-[#A36EFF] bg-clip-text text-transparent";
 
 function Eyebrow({ children }: { children: string }) {
@@ -233,10 +243,10 @@ const HomePage = () => {
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
         <img src={TextLogo} alt="HANDOFF" className="h-6 w-auto sm:h-7" />
         <nav className="hidden items-center gap-7 text-sm text-white/70 md:flex">
-          <a href="#measure" className="hover:text-white">{c.nav.measure}</a>
-          <a href="#how" className="hover:text-white">{c.nav.how}</a>
-          <a href="#styles" className="hover:text-white">{c.nav.styles}</a>
-          <a href="#privacy" className="hover:text-white">{c.nav.privacy}</a>
+          <a href="#measure" onClick={scrollToSection("measure")} className="hover:text-white">{c.nav.measure}</a>
+          <a href="#how" onClick={scrollToSection("how")} className="hover:text-white">{c.nav.how}</a>
+          <a href="#styles" onClick={scrollToSection("styles")} className="hover:text-white">{c.nav.styles}</a>
+          <a href="#privacy" onClick={scrollToSection("privacy")} className="hover:text-white">{c.nav.privacy}</a>
         </nav>
         <div className="flex items-center gap-3">
           <LanguageToggle />
@@ -261,7 +271,7 @@ const HomePage = () => {
               <span className={`${gradientText} sm:whitespace-nowrap`}>{c.heroTitle[1]}</span>
             </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">{c.heroBody}</p>
-            <a href="#measure" className="mt-3 inline-block text-sm font-semibold text-[#C59BFF] hover:underline">
+            <a href="#measure" onClick={scrollToSection("measure")} className="mt-3 inline-block text-sm font-semibold text-[#C59BFF] hover:underline">
               {c.measureLink} →
             </a>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
