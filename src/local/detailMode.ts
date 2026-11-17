@@ -7,7 +7,8 @@ export const DETAIL_MODE_KEY = 'detailMode'
 /** 동의 문구가 바뀌면 올려서 다시 동의를 받는다 */
 export const CONSENT_VERSION = 1
 
-export type DetailScope = 'conversation' | '30m' | '1h' | 'today'
+/** '30m' | '1h' 는 예전 버전에서 저장된 값 호환용 (새로 고를 수는 없음) */
+export type DetailScope = 'conversation' | 'today' | 'always' | '30m' | '1h'
 
 export interface DetailMode {
   consentVersion: number
@@ -48,8 +49,9 @@ export function scopeUntil(scope: DetailScope, now: number = Date.now()): number
       return end.getTime()
     }
     case 'conversation':
-      // 대화 단위라도 하루가 지나면 자동으로 끈다
-      return now + 24 * 60 * 60_000
+    case 'always':
+      // 사용자가 끌 때까지. 켜져 있는 동안 화면 표시가 항상 보이고 거기서 바로 끌 수 있다.
+      return Number.MAX_SAFE_INTEGER
   }
 }
 
@@ -59,6 +61,8 @@ export function isExpired(mode: DetailMode, now: number = Date.now()): boolean {
 
 export function remainingText(mode: DetailMode, lang: 'ko' | 'en', now: number = Date.now()): string {
   if (mode.scope === 'conversation') return lang === 'ko' ? '이 대화만' : 'This conversation only'
+  if (mode.scope === 'always') return lang === 'ko' ? '끌 때까지' : 'Until turned off'
+  if (mode.scope === 'today') return lang === 'ko' ? '오늘만' : 'Today only'
   const minutes = Math.max(0, Math.ceil((mode.until - now) / 60_000))
   if (minutes >= 60) {
     const hours = Math.floor(minutes / 60)

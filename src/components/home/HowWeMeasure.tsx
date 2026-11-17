@@ -54,7 +54,7 @@ const COPY = {
       title: "동의하면, 무엇을 물었는지까지",
       lead: "원하는 사람만 팝업에서 켤 수 있습니다. 동의 화면에서 읽는 것과 하지 않는 것을 확인하고, 범위를 직접 고릅니다.",
       steps: [
-        { title: "동의하고 범위 선택", body: "지금 이 대화만, 30분, 1시간, 오늘 하루 중에서 고릅니다. 범위가 끝나면 저절로 꺼집니다." },
+        { title: "동의하고 범위 선택", body: "지금 이 대화만, 오늘만, 끌 때까지 중에서 고릅니다. 켜져 있는 동안 화면에 표시가 보이고 바로 끌 수 있습니다." },
         { title: "브라우저 안에서 분류", body: "보낸 질문을 그 자리에서 요청 유형으로 나눕니다." },
         { title: "텍스트는 바로 버림", body: "질문 텍스트는 저장하지도, 서버나 AI로 보내지도 않습니다. 남는 건 유형과 글자 수뿐입니다." },
       ],
@@ -65,7 +65,7 @@ const COPY = {
         "평균 질문 길이 (맥락을 직접 주는지, 짧게 맡기는지)",
         "요청 유형까지 반영해 더 정확해진 스타일 판정",
       ],
-      indicator: "켜져 있는 동안 AI 사이트 오른쪽 아래에 표시가 보이고, 거기서 바로 끌 수 있습니다.",
+      indicator: "켜져 있는 동안 AI 사이트 오른쪽 위에 표시가 보이고, 거기서 바로 끌 수 있습니다.",
     },
   },
   en: {
@@ -113,7 +113,7 @@ const COPY = {
       title: "With your consent, what you asked too",
       lead: "Only people who want it turn it on in the popup. The consent screen shows what is read and what isn't, and you choose the scope.",
       steps: [
-        { title: "Consent and choose a scope", body: "This conversation only, 30 minutes, 1 hour or today. It turns itself off when the scope ends." },
+        { title: "Consent and choose a scope", body: "This conversation only, today only, or until you turn it off. While it's on, an indicator stays visible and you can turn it off right away." },
         { title: "Classified in your browser", body: "Each prompt you send is sorted into a request type on the spot." },
         { title: "Text is discarded", body: "Prompt text is never stored or sent to any server or AI. Only the type and length remain." },
       ],
@@ -124,7 +124,7 @@ const COPY = {
         "Average prompt length (giving context yourself vs. handing it off briefly)",
         "A more precise style that also reflects request types",
       ],
-      indicator: "While it's on, an indicator shows at the bottom right of the AI site, and you can turn it off right there.",
+      indicator: "While it's on, an indicator shows at the top right of the AI site, and you can turn it off right there.",
     },
   },
 };

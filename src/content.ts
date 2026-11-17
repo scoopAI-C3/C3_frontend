@@ -146,7 +146,7 @@ function renderBadge() {
     const root = badgeHost.attachShadow({ mode: 'open' })
     root.innerHTML = `
       <style>
-        .badge { position: fixed; right: 16px; bottom: 16px; z-index: 2147483647; display: flex; align-items: center; gap: 8px;
+        .badge { position: fixed; right: 16px; top: 72px; z-index: 2147483647; display: flex; align-items: center; gap: 8px;
           padding: 8px 10px 8px 12px; border-radius: 999px; background: #211F26; color: #fff; border: 1px solid #A36EFF;
           font: 600 12px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", sans-serif; box-shadow: 0 6px 20px rgba(0,0,0,.35); }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #FF7DFD; box-shadow: 0 0 8px #FF7DFD; }

@@ -140,7 +140,7 @@ function AgentControlCard() {
             </defs>
           </svg>
         </div>
-        <h1 className="text-xl font-semibold text-white">선택적 AI 활용</h1>
+        <h1 className="text-xl font-semibold text-white">HANDOFF</h1>
       </div>
 
       <div className="bg-[#2B2930] rounded-2xl p-5">

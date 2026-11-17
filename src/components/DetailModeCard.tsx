@@ -39,17 +39,16 @@ const COPY = {
     scopeTitle: "범위",
     scopes: {
       conversation: "지금 이 대화만",
-      "30m": "30분 동안",
-      "1h": "1시간 동안",
-      today: "오늘 하루 (자정까지)",
-    } as Record<DetailScope, string>,
+      today: "오늘만 (자정에 꺼짐)",
+      always: "끌 때까지 계속",
+    } as Partial<Record<DetailScope, string>>,
     conversationUnavailable: "AI 사이트의 대화 화면에서 팝업을 열면 선택할 수 있어요.",
     newConversation: "새 대화를 시작하면 그 대화에만 적용돼요.",
     agree: "위 내용을 확인했으며, 상세 분석에 동의합니다.",
     privacy: "개인정보처리방침",
     cancel: "취소",
     start: "동의하고 시작",
-    hint: "켜져 있는 동안 AI 사이트 오른쪽 아래에 표시가 보이고, 거기서도 끌 수 있어요.",
+    hint: "켜져 있는 동안 AI 사이트 오른쪽 위에 표시가 보이고, 거기서도 끌 수 있어요.",
   },
   en: {
     title: "Detailed analysis",
@@ -71,17 +70,16 @@ const COPY = {
     scopeTitle: "Scope",
     scopes: {
       conversation: "This conversation only",
-      "30m": "For 30 minutes",
-      "1h": "For 1 hour",
-      today: "Today (until midnight)",
-    } as Record<DetailScope, string>,
+      today: "Today only (off at midnight)",
+      always: "Until I turn it off",
+    } as Partial<Record<DetailScope, string>>,
     conversationUnavailable: "Open the popup on an AI site's chat to choose this.",
     newConversation: "Applies only to the conversation you start next.",
     agree: "I have read the above and agree to detailed analysis.",
     privacy: "Privacy policy",
     cancel: "Cancel",
     start: "Agree and start",
-    hint: "While it's on, an indicator shows at the bottom right of the AI site, where you can also turn it off.",
+    hint: "While it's on, an indicator shows at the top right of the AI site, where you can also turn it off.",
   },
 };
 
@@ -108,7 +106,7 @@ const DetailModeCard = ({ onConsentViewChange }: DetailModeCardProps) => {
   const [mode, setMode] = useState<DetailMode | null>(null);
   const [consentOpen, setConsentOpen] = useState(false);
   const [page, setPage] = useState<PageInfo | null>(null);
-  const [scope, setScope] = useState<DetailScope>("1h");
+  const [scope, setScope] = useState<DetailScope>("always");
   const [agreed, setAgreed] = useState(false);
   const [, setTick] = useState(0);
 
@@ -138,8 +136,8 @@ const DetailModeCard = ({ onConsentViewChange }: DetailModeCardProps) => {
   const openConsent = async () => {
     const info = await readPageInfo();
     setPage(info);
-    // "이 대화만"은 새 대화에서 꺼져 헷갈리기 쉬워 기본값은 시간 범위로 둔다
-    setScope("1h");
+    // 켜져 있는 동안 화면 표시가 항상 보이고 바로 끌 수 있으므로 기본값은 "끌 때까지"
+    setScope("always");
     setAgreed(false);
     setConsentOpen(true);
     onConsentViewChange(true);
@@ -174,7 +172,7 @@ const DetailModeCard = ({ onConsentViewChange }: DetailModeCardProps) => {
   const turnOff = () => chrome.storage.local.remove(DETAIL_MODE_KEY);
 
   if (consentOpen) {
-    const scopes: DetailScope[] = ["conversation", "30m", "1h", "today"];
+    const scopes: DetailScope[] = ["conversation", "today", "always"];
     return (
       <div className="flex flex-col gap-4 text-white">
         <h2 className="text-lg font-semibold">{c.consentTitle}</h2>

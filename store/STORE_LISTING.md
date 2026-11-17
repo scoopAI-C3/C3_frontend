@@ -64,10 +64,10 @@ HANDOFF는 ChatGPT, Claude, Gemini를 쓰는 방식을 분석해 나의 AI 협�
 · 확장 프로그램 사용 기록 없이도 해 볼 수 있는 10문항 설문
 
 ■ 상세 분석 (선택)
-동의한 사람만 켤 수 있습니다. 지금 이 대화만, 30분, 1시간, 오늘 하루 중 범위를 고르면
+동의한 사람만 켤 수 있습니다. 지금 이 대화만, 오늘만, 끌 때까지 중 범위를 고르면
 그 안에서 보낸 질문을 실행·의견·검증·수정·정보 요청으로 분류해 결과가 더 정확해집니다.
 질문 텍스트는 브라우저 안에서 분류한 뒤 바로 버리며, 저장하거나 보내지 않습니다.
-켜져 있는 동안 AI 사이트 오른쪽 아래에 표시가 보이고, 거기서 바로 끌 수 있습니다.
+켜져 있는 동안 AI 사이트 오른쪽 위에 표시가 보이고, 거기서 바로 끌 수 있습니다.
 
 ■ 개인정보
 · 기본 분석은 프롬프트와 AI 응답의 내용을 읽지 않습니다. 시점과 이벤트 종류만 사용합니다.
@@ -104,10 +104,10 @@ HANDOFF analyzes the way you work with ChatGPT, Claude and Gemini and shows you 
 · A 10-question survey you can take without any usage history
 
 ■ Detailed analysis (optional)
-Only people who consent can turn it on. Choose a scope (this conversation, 30 minutes, 1 hour or today),
+Only people who consent can turn it on. Choose a scope (this conversation, today, or until you turn it off),
 and prompts sent within it are classified as do / opinion / check / revise / info requests for a more precise result.
 Prompt text is classified in your browser and discarded right away; it is never stored or sent.
-While it's on, an indicator shows at the bottom right of the AI site, where you can turn it off.
+While it's on, an indicator shows at the top right of the AI site, where you can turn it off.
 
 ■ Privacy
 · By default, the content of your prompts and AI responses is never read. Only timing and event type are used.
@@ -146,7 +146,7 @@ Used for a single one-minute idle timer. When the user has stopped prompting for
 ```
 The content script runs only on these three AI chat sites. By default it observes DOM changes to detect three moments: when the user submits a prompt, when the AI response starts, and when it ends, and records only the event type and timestamp.
 
-Optional "Detailed analysis": only after the user opens a consent screen in the popup, reads what is accessed, checks an explicit consent box and chooses a scope (this conversation only, 30 minutes, 1 hour or today), the content script reads the text of prompts the user sends within that scope and classifies each one into a request type (do / opinion / check / revise / info) inside the browser. The text is discarded immediately after classification and is never stored or transmitted; only the type label and character counts are kept locally. A visible indicator is shown on the page while it is active and lets the user turn it off. The scope expires automatically.
+Optional "Detailed analysis": only after the user opens a consent screen in the popup, reads what is accessed, checks an explicit consent box and chooses a scope (this conversation only, today only, or until turned off), the content script reads the text of prompts the user sends within that scope and classifies each one into a request type (do / opinion / check / revise / info) inside the browser. The text is discarded immediately after classification and is never stored or transmitted; only the type label and character counts are kept locally. A visible indicator is shown on the page while it is active and lets the user turn it off. "Today only" turns off at midnight; the other scopes stay on until the user turns them off from the indicator or the popup.
 
 The content script never modifies the page content (apart from the indicator) and all records stay in the browser.
 ```
@@ -197,7 +197,7 @@ No account is required.
 
 The Monitoring switch in the popup stops all collection.
 
-To test the optional Detailed analysis: open the popup while a ChatGPT/Claude/Gemini chat is the active tab, click "Turn on", read the consent screen, check the consent box, choose a scope and click "Agree and start". An indicator appears at the bottom right of the chat page. Send a few prompts, then open the report: a "Request Types" section shows the classification. Prompt text is never stored (you can inspect chrome.storage to confirm) and can be turned off from the indicator or the popup.
+To test the optional Detailed analysis: open the popup while a ChatGPT/Claude/Gemini chat is the active tab, click "Turn on", read the consent screen, check the consent box, choose a scope and click "Agree and start". An indicator appears at the top right of the chat page. Send a few prompts, then open the report: a "Request Types" section shows the classification. Prompt text is never stored (you can inspect chrome.storage to confirm) and can be turned off from the indicator or the popup.
 ```
 
 ## 5. 등록 후 할 일
