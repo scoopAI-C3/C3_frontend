@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { getSessionGraph } from "../apis/session";
 import type { SessionGraphData } from "../types/session";
-import reportBg from "../assets/reportBg.png";
+import reportBg from "../assets/reportBg.webp";
 import { useLanguage } from "../contexts/LanguageContext";
 
 const nodeNameMapKo: Record<string, string> = {

@@ -4,7 +4,7 @@
 /* Inter Variable Font */
 @font-face {
   font-family: "Inter";
-  src: url("/fonts/Inter-VariableFont.ttf") format("truetype");
+  src: url("/fonts/Inter-VariableFont.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -13,7 +13,7 @@
 /* NanumSquareRound Fonts */
 @font-face {
   font-family: "NanumSquareRound";
-  src: url("/fonts/NanumSquareRoundL.ttf") format("truetype");
+  src: url("/fonts/NanumSquareRoundL.woff2") format("woff2");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -21,7 +21,7 @@
 
 @font-face {
   font-family: "NanumSquareRound";
-  src: url("/fonts/NanumSquareRoundR.ttf") format("truetype");
+  src: url("/fonts/NanumSquareRoundR.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -29,7 +29,7 @@
 
 @font-face {
   font-family: "NanumSquareRound";
-  src: url("/fonts/NanumSquareRoundB.ttf") format("truetype");
+  src: url("/fonts/NanumSquareRoundB.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -37,7 +37,7 @@
 
 @font-face {
   font-family: "NanumSquareRound";
-  src: url("/fonts/NanumSquareRoundEB.ttf") format("truetype");
+  src: url("/fonts/NanumSquareRoundEB.woff2") format("woff2");
   font-weight: 800;
   font-style: normal;
   font-display: swap;

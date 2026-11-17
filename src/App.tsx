@@ -8,13 +8,18 @@ import SurveyIntroPage from './pages/SurveyIntroPage'
 import SurveyPage from './pages/SurveyPage'
 import ReportPage from './pages/ReportPage'
 import SharedPage from './pages/SharedPage'
+import HomePage from './pages/HomePage'
+
+// 확장 프로그램 안에서 열리면 팝업, 웹(Vercel)에서 열리면 소개 페이지
+const isExtension = typeof chrome !== 'undefined' && !!chrome.runtime?.id
 
 function App() {
   return (
     <LanguageProvider>
       <HashRouter>
         <Routes>
-          <Route path="/" element={<AgentControlCard />} />
+          <Route path="/" element={isExtension ? <AgentControlCard /> : <HomePage />} />
+          <Route path="/home" element={<HomePage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/survey-intro" element={<SurveyIntroPage />} />

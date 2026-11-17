@@ -27,3 +27,5 @@ dist-ssr
 .codetracker/
 
 .env
+# 스토어 제출용 패키지
+*.zip

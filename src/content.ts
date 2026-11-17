@@ -50,7 +50,12 @@ function sendEvent(event: Omit<AgentEvent, 'timestamp' | 'platform'>) {
     platform
   }
 
-  chrome.runtime.sendMessage({ type: 'AGENT_EVENT', payload: fullEvent })
+  try {
+    // 확장 프로그램이 업데이트/재시작되면 이전 페이지의 content script는 연결이 끊긴다. 조용히 무시.
+    chrome.runtime.sendMessage({ type: 'AGENT_EVENT', payload: fullEvent }).catch(() => undefined)
+  } catch {
+    return
+  }
   console.log('[HANDOFF]', fullEvent.message)
 }
 

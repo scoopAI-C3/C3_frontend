@@ -1,4 +1,5 @@
 import { useLanguage } from "../contexts/LanguageContext";
+import { INSTALL_URL, IS_STORE_LISTED } from "../constants/links";
 
 const AI_SITES = [
   { name: "ChatGPT", url: "https://chat.openai.com", color: "#10A37F" },
@@ -7,7 +8,6 @@ const AI_SITES = [
   { name: "Copilot", url: "https://copilot.microsoft.com", color: "#9333EA" },
 ];
 
-const GITHUB_RELEASE_URL = "https://github.com/scoopAI-C3/C3_frontend";
 
 interface InstallModalProps {
   isOpen: boolean;
@@ -55,17 +55,20 @@ const InstallModal = ({ isOpen, onClose }: InstallModalProps) => {
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] mt-1.5 shrink-0" />
               <a
-                href={GITHUB_RELEASE_URL}
+                href={INSTALL_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#A855F7] hover:underline inline-flex items-center gap-1"
               >
-                {language === 'ko' ? 'GitHub에서 확장 프로그램 다운로드' : 'Download extension from GitHub'}
+                {IS_STORE_LISTED
+                  ? (language === 'ko' ? 'Chrome 웹 스토어에서 설치' : 'Install from the Chrome Web Store')
+                  : (language === 'ko' ? 'GitHub에서 확장 프로그램 다운로드' : 'Download extension from GitHub')}
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
               </a>
             </li>
+            {!IS_STORE_LISTED && (<>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] mt-1.5 shrink-0" />
               <span>{language === 'ko' ? '주소창에' : 'Enter'} <code className="bg-white/10 px-2 py-0.5 rounded text-xs text-white/80">chrome://extensions</code> {language === 'ko' ? '입력' : 'in the address bar'}</span>
@@ -82,6 +85,7 @@ const InstallModal = ({ isOpen, onClose }: InstallModalProps) => {
               <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] mt-1.5 shrink-0" />
               <span>{language === 'ko' ? '다운로드한 폴더 선택' : 'Select the downloaded folder'}</span>
             </li>
+            </>)}
           </ul>
         </div>
 
