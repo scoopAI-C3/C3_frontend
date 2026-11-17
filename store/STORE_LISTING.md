@@ -10,7 +10,7 @@
 - [ ] Vercel 프로젝트 Environment Variables 에 `OPENAI_API_KEY` 를 넣고 재배포했다
 - [ ] 재배포 후 `https://handofff.vercel.app/privacy.html` 이 열린다
 - [ ] 재배포 후 확장 프로그램에서 분석을 실행하면 리포트의 "LLM 상세 분석"에 LLM이 쓴 문장이 나온다 (함수가 실패하면 규칙 기반 문장이 대신 나오므로, 문장이 매번 같다면 함수 로그를 확인)
-- [ ] `public/privacy.html` 의 `CONTACT_EMAIL` 2곳을 실제 문의 메일로 바꿨다
+- [x] `public/privacy.html` 의 문의 메일을 넣었다 (haeun9634@naver.com)
 - [ ] `npm run zip` 으로 `handoff-extension.zip` 을 만들었다
 - [ ] ChatGPT · Claude · Gemini · Copilot 각각에서 프롬프트 1회 전송 시 팝업 RECENT EVENTS에 3줄(전송/응답 시작/응답 종료)이 찍히는지 직접 확인했다 (`src/content.ts` 의 `SELECTORS`)
 - [ ] 개발자 계정 등록(1회 $5), 2단계 인증, 문의 이메일 인증
