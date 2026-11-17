@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import TextLogo from '../assets/TextLogo.png';
-import surveyIntroBg from '../assets/surveyIntroBg.png';
+import surveyIntroBg from '../assets/surveyIntroBg.webp';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const SurveyIntroPage = () => {

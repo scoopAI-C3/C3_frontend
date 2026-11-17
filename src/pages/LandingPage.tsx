@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import LanguageToggle from "../components/LanguageToggle";
 import { useLanguage } from "../contexts/LanguageContext";
 import InstallModal from "../components/InstallModal";
+import { INSTALL_URL, IS_STORE_LISTED } from "../constants/links";
 
 const AI_SITES = [
   { name: "ChatGPT", url: "https://chat.openai.com", color: "#10A37F" },
@@ -15,7 +16,6 @@ const AI_SITES = [
   { name: "Copilot", url: "https://copilot.microsoft.com", color: "#9333EA" },
 ];
 
-const GITHUB_RELEASE_URL = "https://github.com/scoopAI-C3/C3_frontend";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -89,15 +89,18 @@ const LandingPage = () => {
                     <span className="text-[#A855F7] font-bold">1.</span>
                     <span>
                       <a
-                        href={GITHUB_RELEASE_URL}
+                        href={INSTALL_URL}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[#A855F7] hover:underline"
                       >
-                        {language === 'ko' ? 'GitHub에서 확장 프로그램 다운로드' : 'Download extension from GitHub'}
+                        {IS_STORE_LISTED
+                  ? (language === 'ko' ? 'Chrome 웹 스토어에서 설치' : 'Install from the Chrome Web Store')
+                  : (language === 'ko' ? 'GitHub에서 확장 프로그램 다운로드' : 'Download extension from GitHub')}
                       </a>
                     </span>
                   </li>
+                  {!IS_STORE_LISTED && (<>
                   <li className="flex gap-2">
                     <span className="text-[#A855F7] font-bold">2.</span>
                     <span>{language === 'ko' ? 'Chrome에서 ' : 'Go to '}<code className="bg-white/10 px-1 rounded text-xs">chrome://extensions</code>{language === 'ko' ? ' 접속' : ' in Chrome'}</span>
@@ -114,6 +117,7 @@ const LandingPage = () => {
                     <span className="text-[#A855F7] font-bold">5.</span>
                     <span>{language === 'ko' ? '다운로드한 폴더 안의 ' : 'Select the '}<code className="bg-white/10 px-1 rounded text-xs">dist</code>{language === 'ko' ? ' 폴더 선택' : ' folder inside downloaded folder'}</span>
                   </li>
+                  </>)}
                 </ol>
 
                 <div className="border-t border-white/10 pt-4">

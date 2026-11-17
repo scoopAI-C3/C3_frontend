@@ -12,122 +12,147 @@ const OBSERVE_CONDITIONS = {
   refinementIntervalSec: 30  // refinement loop 판단 기준 (초)
 }
 
-// 현재 세션 ID
-let currentSessionId: string | null = null
+const IDLE_ALARM = 'handoff-idle-observe'
+const TRACKING_KEY = 'tracking'
 
-// 세션 추적 데이터
-let sessionStartTime: string | null = null
-const activePlatforms: Set<string> = new Set() // 여러 플랫폼 추적
-let userMessageTimestamps: number[] = []
-let interactionTimeline: InteractionTimelineItem[] = []
+/**
+ * 세션 추적 상태.
+ *
+ * MV3 서비스 워커는 약 30초간 이벤트가 없으면 종료되므로 전역 변수에 두면 사라진다.
+ * 그래서 chrome.storage.session(브라우저를 닫으면 비워지는 메모리 저장소)에 보관하고,
+ * 이벤트를 처리할 때마다 읽고 다시 쓴다.
+ */
+interface TrackingState {
+  currentSessionId: string | null
+  sessionStartTime: string | null
+  activePlatforms: string[]
+  userMessageTimestamps: number[]
+  interactionTimeline: InteractionTimelineItem[]
+  promptsSinceLastObserve: number
+}
 
-// observe API 호출 추적
-let promptsSinceLastObserve: number = 0
-let idleCheckTimer: ReturnType<typeof setTimeout> | null = null
+function emptyState(): TrackingState {
+  return {
+    currentSessionId: null,
+    sessionStartTime: null,
+    activePlatforms: [],
+    userMessageTimestamps: [],
+    interactionTimeline: [],
+    promptsSinceLastObserve: 0
+  }
+}
+
+async function loadState(): Promise<TrackingState> {
+  const data = (await chrome.storage.session.get(TRACKING_KEY)) as { tracking?: TrackingState }
+  return data.tracking ?? emptyState()
+}
+
+async function saveState(state: TrackingState): Promise<void> {
+  await chrome.storage.session.set({ [TRACKING_KEY]: state })
+}
+
+// 여러 탭에서 이벤트가 동시에 들어와도 "읽기 → 수정 → 쓰기"가 섞이지 않도록 직렬 처리
+let queue: Promise<unknown> = Promise.resolve()
+function enqueue<T>(task: () => Promise<T>): Promise<T> {
+  const run = queue.then(task, task)
+  queue = run.catch(() => undefined)
+  return run
+}
 
 // observe 요청 데이터 생성
-function buildObserveRequest(endTime: number): SessionObserveRequest | null {
-  if (!currentSessionId || !sessionStartTime || activePlatforms.size === 0) {
+function buildObserveRequest(state: TrackingState, endTime: number): SessionObserveRequest | null {
+  if (!state.currentSessionId || !state.sessionStartTime || state.activePlatforms.length === 0) {
     return null
   }
 
+  const timestamps = state.userMessageTimestamps
+
   // 평균 프롬프트 간격 계산
   let avgPromptIntervalSec = 0
-  if (userMessageTimestamps.length > 1) {
+  if (timestamps.length > 1) {
     const intervals: number[] = []
-    for (let i = 1; i < userMessageTimestamps.length; i++) {
-      intervals.push((userMessageTimestamps[i] - userMessageTimestamps[i - 1]) / 1000)
+    for (let i = 1; i < timestamps.length; i++) {
+      intervals.push((timestamps[i] - timestamps[i - 1]) / 1000)
     }
     avgPromptIntervalSec = Math.round(intervals.reduce((a, b) => a + b, 0) / intervals.length)
   }
 
   // refinement loop 감지
-  const refinementLoopDetected = userMessageTimestamps.some((ts, i) => {
+  const refinementLoopDetected = timestamps.some((ts, i) => {
     if (i === 0) return false
-    return (ts - userMessageTimestamps[i - 1]) < OBSERVE_CONDITIONS.refinementIntervalSec * 1000
+    return (ts - timestamps[i - 1]) < OBSERVE_CONDITIONS.refinementIntervalSec * 1000
   })
 
-  // 사용된 모든 플랫폼을 쉼표로 연결
-  const platformsUsed = Array.from(activePlatforms).join(',')
-
   return {
-    sessionId: currentSessionId,
+    sessionId: state.currentSessionId,
     context: {
-      domain: platformsUsed,
-      sessionStartAt: sessionStartTime,
+      // 사용된 모든 플랫폼을 쉼표로 연결
+      domain: state.activePlatforms.join(','),
+      sessionStartAt: state.sessionStartTime,
       sessionEndAt: new Date(endTime).toISOString()
     },
     interactionMetrics: {
-      promptSubmitCount: userMessageTimestamps.length,
+      promptSubmitCount: timestamps.length,
       avgPromptIntervalSec,
       refinementLoopDetected
     },
-    interactionTimeline
+    interactionTimeline: state.interactionTimeline
   }
 }
 
-// observe API 호출
-async function callObserveAPI(reason: string) {
-  const request = buildObserveRequest(Date.now())
+// observe API 호출 (성공하면 카운터 리셋)
+async function callObserveAPI(state: TrackingState, reason: string) {
+  const request = buildObserveRequest(state, Date.now())
   if (!request) return
 
   try {
     const response = await observeSession(request)
     console.log(`[HANDOFF] Session observed (${reason}):`, response)
-
-    // 호출 후 카운터 리셋
-    promptsSinceLastObserve = 0
+    state.promptsSinceLastObserve = 0
   } catch (err) {
     console.error('[HANDOFF] Failed to observe session:', err)
   }
 }
 
 // 조건부 observe 호출 체크
-async function checkObserveConditions(event: AgentEvent) {
-  if (!currentSessionId) return
+async function checkObserveConditions(state: TrackingState, event: AgentEvent) {
+  if (!state.currentSessionId) return
 
   // 1. refinement loop 감지 시 즉시 호출
-  if (event.type === 'PROMPT_SUBMIT' && userMessageTimestamps.length >= 2) {
-    const lastTwo = userMessageTimestamps.slice(-2)
+  if (event.type === 'PROMPT_SUBMIT' && state.userMessageTimestamps.length >= 2) {
+    const lastTwo = state.userMessageTimestamps.slice(-2)
     if (lastTwo[1] - lastTwo[0] < OBSERVE_CONDITIONS.refinementIntervalSec * 1000) {
-      await callObserveAPI('refinement loop detected')
+      await callObserveAPI(state, 'refinement loop detected')
       return
     }
   }
 
   // 2. N회 프롬프트 누적 시 호출
-  if (promptsSinceLastObserve >= OBSERVE_CONDITIONS.promptThreshold) {
-    await callObserveAPI(`${OBSERVE_CONDITIONS.promptThreshold} prompts accumulated`)
+  if (state.promptsSinceLastObserve >= OBSERVE_CONDITIONS.promptThreshold) {
+    await callObserveAPI(state, `${OBSERVE_CONDITIONS.promptThreshold} prompts accumulated`)
     return
   }
 
-  // 3. idle timeout 타이머 설정 (마지막 활동 후 X초)
-  if (idleCheckTimer) {
-    clearTimeout(idleCheckTimer)
-  }
-  idleCheckTimer = setTimeout(async () => {
-    if (currentSessionId && promptsSinceLastObserve > 0) {
-      await callObserveAPI('idle timeout')
-    }
-  }, OBSERVE_CONDITIONS.idleTimeoutSec * 1000)
+  // 3. idle timeout (마지막 활동 후 X초). setTimeout은 워커 종료 시 사라지므로 alarms 사용.
+  //    같은 이름으로 다시 만들면 기존 알람이 교체된다.
+  await chrome.alarms.create(IDLE_ALARM, { delayInMinutes: OBSERVE_CONDITIONS.idleTimeoutSec / 60 })
 }
 
-// 이벤트 저장
-async function saveEvent(event: AgentEvent) {
+// 이벤트 처리
+async function handleEvent(event: AgentEvent) {
   const result = await chrome.storage.local.get('events') as { events?: AgentEvent[] }
   const events = result.events ?? []
 
   // 새 이벤트 추가 (최신이 앞으로)
   const updatedEvents = [event, ...events].slice(0, MAX_EVENTS)
-
   await chrome.storage.local.set({ events: updatedEvents })
 
-  // 현재 상태 업데이트
-  await updateStatus(event)
+  const state = await loadState()
+  const platforms = new Set(state.activePlatforms)
 
   // 타임라인에 이벤트 추가 (세션 시작/종료 제외)
   if (event.type !== 'SESSION_START' && event.type !== 'SESSION_END') {
-    interactionTimeline.push({
+    state.interactionTimeline.push({
       type: event.type,
       domain: event.platform,
       timestamp: new Date(event.timestamp).toISOString()
@@ -136,72 +161,60 @@ async function saveEvent(event: AgentEvent) {
 
   // 사용자 메시지 시간 기록
   if (event.type === 'PROMPT_SUBMIT') {
-    userMessageTimestamps.push(event.timestamp)
-    promptsSinceLastObserve++
+    state.userMessageTimestamps.push(event.timestamp)
+    state.promptsSinceLastObserve++
   }
 
   if (event.type === 'SESSION_START') {
-    // 플랫폼 추가
-    activePlatforms.add(event.platform)
+    platforms.add(event.platform)
+    state.activePlatforms = Array.from(platforms)
 
     // 세션이 없으면 새로 시작
-    if (!currentSessionId) {
-      sessionStartTime = new Date(event.timestamp).toISOString()
-      userMessageTimestamps = []
-      interactionTimeline = []
-      promptsSinceLastObserve = 0
-
-      if (idleCheckTimer) {
-        clearTimeout(idleCheckTimer)
-        idleCheckTimer = null
-      }
+    if (!state.currentSessionId) {
+      state.sessionStartTime = new Date(event.timestamp).toISOString()
+      state.userMessageTimestamps = []
+      state.interactionTimeline = []
+      state.promptsSinceLastObserve = 0
+      await chrome.alarms.clear(IDLE_ALARM)
 
       try {
         const response = await startSession()
         if (response.isSuccess && response.result) {
-          currentSessionId = response.result.sessionId
-          await chrome.storage.local.set({ sessionId: currentSessionId })
-          console.log('[HANDOFF] Session started with ID:', currentSessionId)
+          state.currentSessionId = response.result.sessionId
+          await chrome.storage.local.set({ sessionId: state.currentSessionId })
+          console.log('[HANDOFF] Session started with ID:', state.currentSessionId)
         }
       } catch (err) {
         console.error('[HANDOFF] Failed to start session:', err)
       }
-    } else {
-      // 기존 세션에 새 플랫폼 추가
-      console.log(`[HANDOFF] Platform ${event.platform} added to existing session ${currentSessionId}`)
     }
   }
 
   // 조건부 observe 체크
   if (event.type !== 'SESSION_START' && event.type !== 'SESSION_END') {
-    await checkObserveConditions(event)
+    await checkObserveConditions(state, event)
   }
 
-  // 세션 종료 시: 해당 플랫폼만 제거, 모든 플랫폼이 종료되면 세션 종료
+  // 세션 종료 시: 해당 플랫폼만 제거, 모든 플랫폼이 종료되면 마지막 observe 전송
   if (event.type === 'SESSION_END') {
-    activePlatforms.delete(event.platform)
-    console.log(`[HANDOFF] Platform ${event.platform} removed. Active platforms: ${Array.from(activePlatforms).join(', ') || 'none'}`)
-
-    // 모든 플랫폼이 종료되면 세션 종료
-    if (activePlatforms.size === 0) {
-      if (idleCheckTimer) {
-        clearTimeout(idleCheckTimer)
-        idleCheckTimer = null
+    if (platforms.size === 1 && platforms.has(event.platform)) {
+      // 마지막 플랫폼이 닫히는 경우: 플랫폼 정보가 남아 있을 때 마지막 observe 전송
+      await chrome.alarms.clear(IDLE_ALARM)
+      if (state.currentSessionId && state.sessionStartTime) {
+        await callObserveAPI(state, 'all platforms closed')
       }
-
-      if (currentSessionId && sessionStartTime) {
-        await callObserveAPI('all platforms closed')
-      }
-
-      // 세션은 유지하되 데이터만 정리 (sessionId는 유지)
-      // 사용자가 analyze 버튼을 누르기 전까지 sessionId 유지
-      console.log(`[HANDOFF] All platforms closed. Session ${currentSessionId} ready for analysis.`)
+      // 사용자가 분석을 요청할 때까지 sessionId는 유지
     }
+    platforms.delete(event.platform)
+    state.activePlatforms = Array.from(platforms)
   }
+
+  await saveState(state)
+  await updateStatus(event, state.activePlatforms)
 }
 
 // 상태 업데이트
-async function updateStatus(event: AgentEvent) {
+async function updateStatus(event: AgentEvent, activePlatforms: string[]) {
   const statusMap: Record<EventType, string> = {
     'SESSION_START': 'Observing',
     'SESSION_END': 'Inactive',
@@ -223,14 +236,26 @@ async function updateStatus(event: AgentEvent) {
     decisionRisk: riskMap[event.type],
     lastActivity: event.timestamp,
     activePlatform: event.platform,
-    activePlatforms: Array.from(activePlatforms)
+    activePlatforms
   })
 }
+
+// 마지막 활동 후 idle timeout 경과 시 observe 전송
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name !== IDLE_ALARM) return
+  enqueue(async () => {
+    const state = await loadState()
+    if (state.currentSessionId && state.promptsSinceLastObserve > 0) {
+      await callObserveAPI(state, 'idle timeout')
+      await saveState(state)
+    }
+  })
+})
 
 // 메시지 리스너
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'AGENT_EVENT') {
-    saveEvent(message.payload)
+    enqueue(() => handleEvent(message.payload))
       .then(() => sendResponse({ success: true }))
       .catch((err) => sendResponse({ success: false, error: err.message }))
     return true
@@ -252,25 +277,20 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   // 세션 리셋 (분석 완료 후 새 세션 시작을 위해)
   if (message.type === 'RESET_SESSION') {
-    currentSessionId = null
-    sessionStartTime = null
-    activePlatforms.clear()
-    userMessageTimestamps = []
-    interactionTimeline = []
-    promptsSinceLastObserve = 0
-    if (idleCheckTimer) {
-      clearTimeout(idleCheckTimer)
-      idleCheckTimer = null
-    }
-    chrome.storage.local.remove('sessionId')
+    enqueue(async () => {
+      await chrome.alarms.clear(IDLE_ALARM)
+      await saveState(emptyState())
+      await chrome.storage.local.remove('sessionId')
+    })
       .then(() => sendResponse({ success: true }))
       .catch((err) => sendResponse({ success: false, error: err.message }))
     return true
   }
 })
 
-// 확장프로그램 설치 시 초기화
-chrome.runtime.onInstalled.addListener(() => {
+// 확장프로그램 설치 시 초기화 (업데이트 때는 기존 기록을 지우지 않는다)
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason !== chrome.runtime.OnInstalledReason.INSTALL) return
   chrome.storage.local.set({
     events: [],
     agentStatus: 'Inactive',
@@ -280,5 +300,3 @@ chrome.runtime.onInstalled.addListener(() => {
   })
   console.log('[HANDOFF] Extension installed')
 })
-
-console.log('[HANDOFF] Background script loaded')

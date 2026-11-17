@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { AgentEvent, AgentStatusType, RiskType, DisplayEvent } from "../types/agent";
+import { PRIVACY_URL } from "../constants/links";
 
 function AgentControlCard() {
   const [isMonitoring, setIsMonitoring] = useState(true);
@@ -191,6 +192,14 @@ function AgentControlCard() {
       >
         Open Full Dashboard →
       </button>
+      <a
+        href={PRIVACY_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-center text-xs text-white/40 hover:text-white/70 -mt-3"
+      >
+        Privacy Policy
+      </a>
     </div>
   );
 }

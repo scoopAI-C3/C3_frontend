@@ -1,31 +1,35 @@
 {
   "manifest_version": 3,
-  "name": "HANDOFF",
+  "name": "HANDOFF - AI Collaboration Style Analyzer",
+  "short_name": "HANDOFF",
   "version": "1.0.0",
+  "description": "See how you collaborate with AI. Uses only the timing of your chats on ChatGPT, Claude, Gemini and Copilot, never the content.",
   "icons": {
-    "16": "icons/icon-128.png",
-    "32": "icons/icon-128.png",
-    "48": "icons/icon-128.png",
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
   "action": {
+    "default_title": "HANDOFF",
     "default_popup": "index.html",
     "default_icon": {
-      "16": "icons/icon-128.png",
-      "32": "icons/icon-128.png",
-      "48": "icons/icon-128.png",
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
       "128": "icons/icon-128.png"
     }
   },
   "background": {
     "service_worker": "src/background.ts",
-    "type": "module" 
+    "type": "module"
   },
-  "permissions": ["storage", "activeTab", "tabs"],
+  "permissions": ["storage", "alarms"],
   "content_scripts": [
     {
       "matches": ["https://chatgpt.com/*", "https://claude.ai/*", "https://gemini.google.com/*", "https://copilot.microsoft.com/*"],
-      "js": ["src/content.ts"]
+      "js": ["src/content.ts"],
+      "run_at": "document_idle"
     }
   ]
 }
