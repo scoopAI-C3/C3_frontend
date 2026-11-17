@@ -12,6 +12,7 @@ import reportShot from "../assets/home/report.webp";
 import popupShot from "../assets/home/popup.webp";
 import surveyShot from "../assets/home/survey.webp";
 import LanguageToggle from "../components/LanguageToggle";
+import HowWeMeasure from "../components/home/HowWeMeasure";
 import { useLanguage } from "../contexts/LanguageContext";
 import { INSTALL_URL, IS_STORE_LISTED, PRIVACY_URL } from "../constants/links";
 import { TYPE_CONTENTS } from "../local/typeContents";
@@ -29,7 +30,7 @@ const STYLES: { code: TypeCode; name: string; icon: string; accent: string }[] =
 
 const COPY = {
   ko: {
-    nav: { how: "작동 방식", styles: "협업 스타일", privacy: "개인정보" },
+    nav: { measure: "측정 방식", how: "작동 방식", styles: "협업 스타일", privacy: "개인정보" },
     install: IS_STORE_LISTED ? "Chrome에 추가" : "확장 프로그램 받기",
     tryWithout: "설치 없이 설문으로 해보기",
     eyebrow: "From Decision Boundary to Collaboration Style",
@@ -51,7 +52,8 @@ const COPY = {
     boundaryBody:
       "질문이 더 이상 이어지지 않고, AI의 답변이 그대로 행동으로 이어지는 순간. 이 지점에서 판단은 사용자에게서 AI로 넘어갑니다.",
     signalsTitle: "어떻게 포착하나요",
-    signals: ["질문 간격의 변화", "수정·재질문 반복", "연속 질문 후 바로 종료", "세션 흐름의 급격한 전환"],
+    signals: ["답변 후 다음 질문까지의 생각 시간", "답변 직후 다시 묻기 (수정·재질문)", "한 번에 이어 묻는 횟수", "대화를 마치는 시점"],
+    measureLink: "프롬프트 없이 어떻게 알까요?",
     howEyebrow: "How it works",
     howTitle: "설치하고, 평소처럼 쓰면 됩니다",
     steps: [
@@ -103,7 +105,7 @@ const COPY = {
     demo: "데모 영상",
   },
   en: {
-    nav: { how: "How it works", styles: "Styles", privacy: "Privacy" },
+    nav: { measure: "What we measure", how: "How it works", styles: "Styles", privacy: "Privacy" },
     install: IS_STORE_LISTED ? "Add to Chrome" : "Get the extension",
     tryWithout: "Try the survey, no install",
     eyebrow: "From Decision Boundary to Collaboration Style",
@@ -125,7 +127,8 @@ const COPY = {
     boundaryBody:
       "The moment questions stop and the AI's answer turns straight into action. At that point, the decision moves from you to AI.",
     signalsTitle: "How we detect it",
-    signals: ["Changes in prompt intervals", "Refinement and re-asking loops", "Ending right after a burst of questions", "Sudden shifts in the session flow"],
+    signals: ["Think time between an answer and your next prompt", "Re-asking right after an answer", "How many prompts you send in a row", "When a conversation ends"],
+    measureLink: "How can it tell without prompts?",
     howEyebrow: "How it works",
     howTitle: "Install it and use AI as usual",
     steps: [
@@ -230,6 +233,7 @@ const HomePage = () => {
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
         <img src={TextLogo} alt="HANDOFF" className="h-6 w-auto sm:h-7" />
         <nav className="hidden items-center gap-7 text-sm text-white/70 md:flex">
+          <a href="#measure" className="hover:text-white">{c.nav.measure}</a>
           <a href="#how" className="hover:text-white">{c.nav.how}</a>
           <a href="#styles" className="hover:text-white">{c.nav.styles}</a>
           <a href="#privacy" className="hover:text-white">{c.nav.privacy}</a>
@@ -257,6 +261,9 @@ const HomePage = () => {
               <span className={`${gradientText} sm:whitespace-nowrap`}>{c.heroTitle[1]}</span>
             </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">{c.heroBody}</p>
+            <a href="#measure" className="mt-3 inline-block text-sm font-semibold text-[#C59BFF] hover:underline">
+              {c.measureLink} →
+            </a>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <InstallButton label={c.install} />
               <Link
@@ -361,6 +368,8 @@ const HomePage = () => {
             </div>
           </div>
         </section>
+
+        <HowWeMeasure />
 
         {/* 작동 방식 */}
         <section id="how" className="scroll-mt-6 border-y border-white/5 bg-black/20">
