@@ -221,7 +221,9 @@ const translations: Record<Language, Record<string, string>> = { ko, en };
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem('language');
-    return (saved as Language) || 'ko';
+    if (saved === 'ko' || saved === 'en') return saved;
+    // 처음 열면 브라우저 언어를 따른다 (한국어가 아니면 영어). 스토어 심사자도 영어 화면을 보게 된다.
+    return navigator.language?.toLowerCase().startsWith('ko') ? 'ko' : 'en';
   });
 
   useEffect(() => {

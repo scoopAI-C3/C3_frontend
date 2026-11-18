@@ -48,7 +48,7 @@ const COPY = {
     },
     honestTitle: "한계도 있습니다",
     honest:
-      "내용을 보지 않으니 같은 30초가 답을 읽은 시간인지 잠깐 딴짓한 시간인지는 알 수 없습니다. 그래서 점수로 평가하지 않고 경향을 스타일로 보여 주며, 더 정확히 알고 싶다면 아래 상세 분석을 켤 수 있습니다.",
+      "내용을 모르니 같은 30초가 답을 읽은 시간인지 잠깐 딴짓한 시간인지는 알 수 없습니다. 그래서 점수로 평가하지 않고 경향을 스타일로 보여 주며, 더 정확히 알고 싶다면 아래 상세 분석을 켤 수 있습니다.",
     detail: {
       eyebrow: "Detailed analysis · 선택",
       title: "동의하면, 무엇을 물었는지까지",
@@ -107,7 +107,7 @@ const COPY = {
     },
     honestTitle: "What it can't see",
     honest:
-      "Since we never see content, we can't tell whether 30 seconds was spent reading the answer or doing something else. That's why we show a tendency as a style rather than a score, and you can turn on detailed analysis below for more precision.",
+      "Since the analysis doesn't use content, we can't tell whether 30 seconds was spent reading the answer or doing something else. That's why we show a tendency as a style rather than a score, and you can turn on detailed analysis below for more precision.",
     detail: {
       eyebrow: "Detailed analysis · optional",
       title: "With your consent, what you asked too",
