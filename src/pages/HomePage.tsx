@@ -36,7 +36,7 @@ const COPY = {
     eyebrow: "From Decision Boundary to Collaboration Style",
     heroTitle: ["당신은 AI와", "어떻게 협업하고 있나요?"],
     heroBody:
-      "HANDOFF는 기본적으로 프롬프트를 읽지 않습니다. AI를 쓰는 '행동'만으로 판단이 AI에게 넘어가는 순간을 찾아, 나의 AI 협업 스타일로 보여 줍니다.",
+      "HANDOFF는 기본적으로 프롬프트 내용 없이, AI를 쓰는 '행동'만으로 판단이 AI에게 넘어가는 순간을 찾아 나의 AI 협업 스타일로 보여 줍니다.",
     supported: "지원",
     award: "Scoop AI Hackathon in Seoul 우수상",
     problemEyebrow: "Problem",
@@ -90,7 +90,7 @@ const COPY = {
     privacyEyebrow: "Privacy-first",
     privacyTitle: "내 기록은 내 브라우저에",
     privacyItems: [
-      { title: "기본은 내용 없이", body: "기본 분석은 질문 텍스트를 읽지 않습니다. 상세 분석을 켜도 텍스트는 분류한 뒤 바로 버리고, 저장하거나 보내지 않습니다." },
+      { title: "기본은 내용 없이", body: "기본 분석은 질문 텍스트 없이 시각만으로 합니다. 상세 분석을 켜도 텍스트는 분류한 뒤 바로 버리고, 저장하거나 보내지 않습니다." },
       { title: "브라우저 안에만 저장", body: "기록과 분석 결과는 내 브라우저에만 있습니다. 사용자 기록을 보관하는 서버가 없습니다." },
       { title: "로그인 없음", body: "계정도 이메일도 필요 없습니다. 확장 프로그램을 지우면 기록도 함께 사라집니다." },
       { title: "언제든 끄기", body: "Monitoring 스위치로 기록을, 팝업이나 화면 표시로 상세 분석을 바로 멈출 수 있습니다." },
@@ -111,7 +111,7 @@ const COPY = {
     eyebrow: "From Decision Boundary to Collaboration Style",
     heroTitle: ["How do you", "collaborate with AI?"],
     heroBody:
-      "By default, HANDOFF doesn't read your prompts. It looks only at how you use AI to find the moment a decision is handed off to AI, and shows it as your AI collaboration style.",
+      "By default, HANDOFF doesn't use the content of your prompts. It looks only at how you use AI to find the moment a decision is handed off to AI, and shows it as your AI collaboration style.",
     supported: "Works on",
     award: "Excellence Award, Scoop AI Hackathon in Seoul",
     problemEyebrow: "Problem",
@@ -165,7 +165,7 @@ const COPY = {
     privacyEyebrow: "Privacy-first",
     privacyTitle: "Your records stay in your browser",
     privacyItems: [
-      { title: "Content-free by default", body: "The default analysis never reads prompt text. Even with detailed analysis on, text is discarded right after classification and never stored or sent." },
+      { title: "Content-free by default", body: "The default analysis uses timing only, not prompt text. Even with detailed analysis on, text is discarded right after classification and never stored or sent." },
       { title: "Stays in your browser", body: "Records and results live only in your browser. There is no server keeping user records." },
       { title: "No sign-in", body: "No account, no email. Remove the extension and the records go with it." },
       { title: "Turn it off anytime", body: "The Monitoring switch stops recording, and the popup or on-page indicator stops detailed analysis." },

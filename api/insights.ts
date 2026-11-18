@@ -7,7 +7,7 @@
  *
  * 환경 변수
  *   OPENAI_API_KEY   (필수)
- *   OPENAI_MODEL     (선택, 기본 gpt-4o-mini)
+ *   OPENAI_MODEL     (선택, 기본 gpt-6-luna)
  *   OPENAI_BASE_URL  (선택, 기본 https://api.openai.com/v1)
  *   ALLOWED_ORIGINS  (선택, 쉼표 구분. 지정하면 그 오리진만 허용. 예: chrome-extension://<확장 ID>,https://handofff.vercel.app)
  */
@@ -201,6 +201,20 @@ function extractInsights(text: string): string[] {
   }
 }
 
+// ── 모델 설정 ────────────────────────────────────────────────
+
+/** gpt-4o-mini는 2027-01-14에 API에서 종료되고, OpenAI가 안내한 대체 모델이 gpt-6-luna다. */
+const DEFAULT_MODEL = 'gpt-6-luna'
+
+/**
+ * 추론 모델은 temperature 0.7과 max_tokens를 거절할 수 있고, 추론에 출력 한도를 다 쓰면 빈 답이 온다.
+ * 그래서 추론 없이 바로 답하게 한다. 추론 설정이 없는 gpt-3·4 계열에는 예전 값을 쓴다.
+ */
+function generationParams(model: string): Record<string, unknown> {
+  if (/^gpt-[34]/.test(model)) return { temperature: 0.7, max_tokens: 400 }
+  return { reasoning_effort: 'none', max_completion_tokens: 400 }
+}
+
 // ── 핸들러 본체 (테스트할 수 있도록 순수 함수로 분리) ────────
 
 export async function handleInsights(
@@ -228,13 +242,13 @@ export async function handleInsights(
 
   try {
     const baseUrl = (env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '')
+    const model = env.OPENAI_MODEL || DEFAULT_MODEL
     const response = await fetchImpl(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: env.OPENAI_MODEL || 'gpt-4o-mini',
-        temperature: 0.7,
-        max_tokens: 400,
+        model,
+        ...generationParams(model),
         response_format: { type: 'json_object' },
         messages: [{ role: 'user', content: buildPrompt(input) }],
       }),
